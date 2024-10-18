@@ -3,7 +3,7 @@ package com.alihantaycu.elterminali.ui.product
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.alihantaycu.elterminali.data.model.Product
+import com.alihantaycu.elterminali.data.entity.Product
 import com.alihantaycu.elterminali.databinding.ItemProductManageBinding
 
 class ProductAdapter(

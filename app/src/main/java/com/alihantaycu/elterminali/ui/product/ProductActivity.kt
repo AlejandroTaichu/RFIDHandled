@@ -1,15 +1,18 @@
 package com.alihantaycu.elterminali.ui.product
 
+import android.R
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
+import android.widget.ArrayAdapter
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.alihantaycu.elterminali.R
-import com.alihantaycu.elterminali.data.model.Product
+import com.alihantaycu.elterminali.data.entity.Product
 import com.alihantaycu.elterminali.databinding.ActivityProductBinding
 import com.alihantaycu.elterminali.databinding.DialogAddEditProductBinding
+import com.alihantaycu.elterminali.data.dao.ProductDao
+import com.alihantaycu.elterminali.data.database.AppDatabase
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -19,6 +22,8 @@ class ProductActivity : AppCompatActivity() {
     private lateinit var productAdapter: ProductAdapter
     private val products = mutableListOf<Product>()
 
+    // ProductDao'yu veritabanına erişim için ekleyelim
+    private lateinit var productDao: ProductDao
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,6 +32,10 @@ class ProductActivity : AppCompatActivity() {
 
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        // DAO'yu başlatıyoruz
+        val productDatabase = AppDatabase.getDatabase(this)  // Veritabanını başlat
+        productDao = productDatabase.productDao()  // ProductDao'yu al
 
         setupRecyclerView()
         setupAddProductFab()
@@ -51,15 +60,23 @@ class ProductActivity : AppCompatActivity() {
         }
     }
 
+    // Veritabanından ürünleri yükleme
     private fun loadProducts() {
-        // TODO: Load products from a data source (e.g., local database or API)
-        // For now, we'll add some dummy data
-        products.addAll(listOf(
-            Product("1", "RFID001", "IMEI001", "Ürün 1", "Gelen Kargo Depo", "Raf A", getCurrentDate()),
-            Product("2", "RFID002", "IMEI002", "Ürün 2", "Giden Kargo Depo", "Raf B", getCurrentDate()),
-            Product("3", "RFID003", "IMEI003", "Ürün 3", "Yedek Parça Depo", "Raf C", getCurrentDate())
-        ))
-        productAdapter.notifyDataSetChanged()
+        lifecycleScope.launch {
+            productDao.getAllProducts().collect { productList ->
+                products.clear()
+                products.addAll(productList)
+                productAdapter.notifyDataSetChanged()  // Adapteri güncelle
+            }
+        }
+    }
+
+    // Ürün eklerken veritabanına eklemek
+    private fun addProductToDatabase(newProduct: Product) {
+        lifecycleScope.launch {
+            productDao.insertProduct(newProduct)
+            loadProducts()  // Veritabanı güncellendikten sonra listeyi yeniden yükleyin
+        }
     }
 
     private fun getCurrentDate(): String {
@@ -69,21 +86,27 @@ class ProductActivity : AppCompatActivity() {
 
     private fun showAddProductDialog() {
         val dialogBinding = DialogAddEditProductBinding.inflate(layoutInflater)
+
+        // Spinner için ArrayAdapter tanımlıyoruz
+        val locations = listOf("Gelen Kargo Depo", "Giden Kargo Depo", "Yedek Parça Depo")
+        val locationAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, locations)
+        locationAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        dialogBinding.spinnerLocation.adapter = locationAdapter
+
         AlertDialog.Builder(this)
             .setTitle("Yeni Ürün Ekle")
             .setView(dialogBinding.root)
             .setPositiveButton("Ekle") { _, _ ->
                 val newProduct = Product(
-                    id = (products.size + 1).toString(),
+                    id = UUID.randomUUID().toString(), // ID'yi UUID ile dinamik oluştur
                     rfidTag = dialogBinding.editTextRfid.text.toString(),
                     imei = dialogBinding.editTextImei.text.toString(),
                     name = dialogBinding.editTextName.text.toString(),
-                    location = dialogBinding.editTextLocation.text.toString(),
+                    location = dialogBinding.spinnerLocation.selectedItem.toString(),
                     address = dialogBinding.editTextAddress.text.toString(),
-                    createdDate = java.util.Date().toString()
+                    createdDate = getCurrentDate()
                 )
-                products.add(newProduct)
-                productAdapter.notifyItemInserted(products.size - 1)
+                addProductToDatabase(newProduct)
             }
             .setNegativeButton("İptal", null)
             .show()
@@ -91,11 +114,18 @@ class ProductActivity : AppCompatActivity() {
 
     private fun showEditProductDialog(product: Product) {
         val dialogBinding = DialogAddEditProductBinding.inflate(layoutInflater)
+
+        // Spinner için ArrayAdapter tanımlıyoruz
+        val locations = listOf("Gelen Kargo Depo", "Giden Kargo Depo", "Yedek Parça Depo")
+        val locationAdapter = ArrayAdapter(this, R.layout.simple_spinner_item, locations)
+        locationAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        dialogBinding.spinnerLocation.adapter = locationAdapter
+
         dialogBinding.apply {
             editTextRfid.setText(product.rfidTag)
             editTextImei.setText(product.imei)
             editTextName.setText(product.name)
-            editTextLocation.setText(product.location)
+            spinnerLocation.setSelection(locations.indexOf(product.location))
             editTextAddress.setText(product.address)
         }
         AlertDialog.Builder(this)
@@ -106,27 +136,26 @@ class ProductActivity : AppCompatActivity() {
                     rfidTag = dialogBinding.editTextRfid.text.toString(),
                     imei = dialogBinding.editTextImei.text.toString(),
                     name = dialogBinding.editTextName.text.toString(),
-                    location = dialogBinding.editTextLocation.text.toString(),
+                    location = dialogBinding.spinnerLocation.selectedItem.toString(),
                     address = dialogBinding.editTextAddress.text.toString()
                 )
-                val index = products.indexOfFirst { it.id == product.id }
-                if (index != -1) {
-                    products[index] = updatedProduct
-                    productAdapter.notifyItemChanged(index)
+                lifecycleScope.launch {
+                    productDao.updateProduct(updatedProduct)
+                    loadProducts()  // Veritabanı güncellendikten sonra listeyi yeniden yükleyin
                 }
             }
             .setNegativeButton("İptal", null)
             .show()
     }
+
     private fun showDeleteConfirmationDialog(product: Product) {
         AlertDialog.Builder(this)
             .setTitle("Ürünü Sil")
             .setMessage("Bu ürünü silmek istediğinizden emin misiniz?")
             .setPositiveButton("Sil") { _, _ ->
-                val index = products.indexOfFirst { it.id == product.id }
-                if (index != -1) {
-                    products.removeAt(index)
-                    productAdapter.notifyItemRemoved(index)
+                lifecycleScope.launch {
+                    productDao.deleteProduct(product)
+                    loadProducts()  // Veritabanı güncellendikten sonra listeyi yeniden yükleyin
                 }
             }
             .setNegativeButton("İptal", null)

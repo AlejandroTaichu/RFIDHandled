@@ -3,8 +3,8 @@ package com.alihantaycu.elterminali.ui.count
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.alihantaycu.elterminali.data.entity.Product
 import com.alihantaycu.elterminali.databinding.ActivityCountBinding
-import com.alihantaycu.elterminali.data.model.Product
 import java.text.SimpleDateFormat
 import java.util.*
 
