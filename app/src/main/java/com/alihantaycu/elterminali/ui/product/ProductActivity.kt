@@ -1,12 +1,14 @@
 package com.alihantaycu.elterminali.ui.product
 
-import android.R
 import android.os.Bundle
 import android.widget.ArrayAdapter
+import android.widget.Filter
+import android.widget.Filterable
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.alihantaycu.elterminali.R
 import com.alihantaycu.elterminali.data.entity.Product
 import com.alihantaycu.elterminali.databinding.ActivityProductBinding
 import com.alihantaycu.elterminali.databinding.DialogAddEditProductBinding
@@ -21,6 +23,7 @@ class ProductActivity : AppCompatActivity() {
     private lateinit var binding: ActivityProductBinding
     private lateinit var productAdapter: ProductAdapter
     private val products = mutableListOf<Product>()
+    private val filteredProducts = mutableListOf<Product>()
 
     // ProductDao'yu veritabanına erişim için ekleyelim
     private lateinit var productDao: ProductDao
@@ -39,11 +42,12 @@ class ProductActivity : AppCompatActivity() {
 
         setupRecyclerView()
         setupAddProductFab()
+        setupSearchView()
         loadProducts()
     }
 
     private fun setupRecyclerView() {
-        productAdapter = ProductAdapter(products,
+        productAdapter = ProductAdapter(filteredProducts,
             onItemClick = { showProductDetails(it) },
             onEditClick = { showEditProductDialog(it) },
             onDeleteClick = { showDeleteConfirmationDialog(it) }
@@ -60,12 +64,27 @@ class ProductActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupSearchView() {
+        binding.productSearchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                productAdapter.filter.filter(newText)  // Arama işlemi
+                return true
+            }
+        })
+    }
+
     // Veritabanından ürünleri yükleme
     private fun loadProducts() {
         lifecycleScope.launch {
             productDao.getAllProducts().collect { productList ->
                 products.clear()
                 products.addAll(productList)
+                filteredProducts.clear()
+                filteredProducts.addAll(products)  // İlk başta tüm ürünleri göster
                 productAdapter.notifyDataSetChanged()  // Adapteri güncelle
             }
         }
@@ -176,5 +195,16 @@ class ProductActivity : AppCompatActivity() {
             """.trimIndent())
             .setPositiveButton("Tamam", null)
             .show()
+    }
+
+    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
+        when (item.itemId) {
+            android.R.id.home -> {
+                // Geri butonuna tıklandığında activity'i kapat
+                finish()
+                return true
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 }

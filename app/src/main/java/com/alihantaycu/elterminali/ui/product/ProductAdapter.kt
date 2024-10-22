@@ -3,15 +3,19 @@ package com.alihantaycu.elterminali.ui.product
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import android.widget.Filter
+import android.widget.Filterable
 import com.alihantaycu.elterminali.data.entity.Product
 import com.alihantaycu.elterminali.databinding.ItemProductManageBinding
 
 class ProductAdapter(
-    private val products: List<Product>,
+    private var products: List<Product>,
     private val onItemClick: (Product) -> Unit,
     private val onEditClick: (Product) -> Unit,
     private val onDeleteClick: (Product) -> Unit
-) : RecyclerView.Adapter<ProductAdapter.ProductViewHolder>() {
+) : RecyclerView.Adapter<ProductAdapter.ProductViewHolder>(), Filterable {
+
+    private var filteredProducts: List<Product> = products
 
     class ProductViewHolder(private val binding: ItemProductManageBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(
@@ -41,8 +45,39 @@ class ProductAdapter(
     }
 
     override fun onBindViewHolder(holder: ProductViewHolder, position: Int) {
-        holder.bind(products[position], onItemClick, onEditClick, onDeleteClick)
+        holder.bind(filteredProducts[position], onItemClick, onEditClick, onDeleteClick)
     }
 
-    override fun getItemCount() = products.size
+    override fun getItemCount(): Int = filteredProducts.size
+
+    // Filterable arayüzünü implement ediyoruz
+    override fun getFilter(): Filter {
+        return object : Filter() {
+            override fun performFiltering(constraint: CharSequence?): FilterResults {
+                val filteredList: MutableList<Product> = mutableListOf()
+                if (constraint == null || constraint.isEmpty()) {
+                    filteredList.addAll(products) // Eğer arama boş ise orijinal listeyi göster
+                } else {
+                    val filterPattern = constraint.toString().lowercase().trim()
+                    for (item in products) {
+                        // İsim filtresi (bu kısımda istediğiniz alanı filtreleyebilirsiniz)
+                        if (item.name.lowercase().contains(filterPattern)) {
+                            filteredList.add(item)
+                        }
+                    }
+                }
+                val results = FilterResults()
+                results.values = filteredList
+                results.count = filteredList.size
+                return results
+            }
+
+            override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
+                if (results != null && results.count > 0) {
+                    filteredProducts = results.values as List<Product>
+                    notifyDataSetChanged()  // Verileri güncelle
+                }
+            }
+        }
+    }
 }

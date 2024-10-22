@@ -5,13 +5,15 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="4dp"
+    android:background="@color/white"
     app:cardCornerRadius="4dp"
     app:cardElevation="2dp">
-<!-- edit ve silme butonları -->
+    <!-- edit ve silme butonları -->
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/white"
         android:padding="8dp">
 
         <TextView
@@ -59,8 +61,8 @@
             app:layout_constraintEnd_toStartOf="@+id/editButton"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/productAddress"
-            tools:ignore="NotSibling"
-            />
+            tools:ignore="NotSibling" />
+
         <TextView
             android:id="@+id/productCreatedDate"
             android:layout_width="0dp"
