@@ -1,9 +1,9 @@
 package com.alihantaycu.elterminali.ui.product
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.ArrayAdapter
-import android.widget.Filter
-import android.widget.Filterable
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -14,6 +14,7 @@ import com.alihantaycu.elterminali.databinding.ActivityProductBinding
 import com.alihantaycu.elterminali.databinding.DialogAddEditProductBinding
 import com.alihantaycu.elterminali.data.dao.ProductDao
 import com.alihantaycu.elterminali.data.database.AppDatabase
+import com.google.zxing.integration.android.IntentIntegrator
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -60,9 +61,69 @@ class ProductActivity : AppCompatActivity() {
 
     private fun setupAddProductFab() {
         binding.addProductFab.setOnClickListener {
-            showAddProductDialog()
+            showAddOptionsDialog() // Seçenekler diyalogunu göster
         }
     }
+
+
+    private fun startQRScanner() {
+        val integrator = IntentIntegrator(this)
+        integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE) // Sadece QR kod taraması için
+        integrator.setPrompt("Lütfen QR kodu okutun")
+        integrator.setCameraId(0) // Arka kamerayı kullan
+        integrator.setBeepEnabled(true) // QR kod okunduğunda bip sesi çal
+        integrator.setBarcodeImageEnabled(true) // QR kodun görüntüsünü kaydet
+        integrator.initiateScan() // Tarayıcıyı başlat
+    }
+
+    private fun showAddOptionsDialog() {
+        val options = arrayOf("QR Okut", "Manuel Ekle")
+
+        AlertDialog.Builder(this)
+            .setTitle("Ürün Ekleme Seçenekleri")
+            .setItems(options) { dialog, which ->
+                when (which) {
+                    0 -> startQRScanner() // QR Okut seçildiğinde tarayıcıyı başlat
+                    1 -> showAddProductDialog() // Manuel Ekle seçildiğinde ürün ekleme diyalogunu aç
+                }
+            }
+            .show()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
+        if (result != null) {
+            if (result.contents == null) {
+                Toast.makeText(this, "QR kod taranamadı", Toast.LENGTH_LONG).show()
+            } else {
+                // QR kodun içeriği burada işlenecek, örneğin:
+                Toast.makeText(this, "Tarama başarılı: ${result.contents}", Toast.LENGTH_LONG).show()
+
+                // İsterseniz bu noktada ürünü QR koddan ekleyebilirsiniz
+                val newProduct = Product(
+                    id = UUID.randomUUID().toString(),
+                    rfidTag = result.contents, // QR koddan gelen içerik
+                    imei = "", // Diğer bilgileri daha sonra doldurabilirsiniz
+                    name = "",
+                    location = "",
+                    address = "",
+                    createdDate = getCurrentDate()
+                )
+                addProductToDatabase(newProduct)
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data)
+        }
+    }
+
+    private fun setupToolbar() {
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.apply {
+            setDisplayHomeAsUpEnabled(true)
+            title = "Ürünleri Yönet"
+        }
+    }
+
 
     private fun setupSearchView() {
         binding.productSearchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {

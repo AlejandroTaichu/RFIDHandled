@@ -38,6 +38,11 @@ class ProductAdapter(
             }
         }
     }
+    fun updateProducts(newProducts: List<Product>) {
+        products = newProducts
+        filteredProducts = newProducts
+        notifyDataSetChanged()
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {
         val binding = ItemProductManageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -56,27 +61,28 @@ class ProductAdapter(
             override fun performFiltering(constraint: CharSequence?): FilterResults {
                 val filteredList: MutableList<Product> = mutableListOf()
                 if (constraint == null || constraint.isEmpty()) {
-                    filteredList.addAll(products) // Eğer arama boş ise orijinal listeyi göster
+                    filteredList.addAll(products)
                 } else {
                     val filterPattern = constraint.toString().lowercase().trim()
                     for (item in products) {
-                        // İsim filtresi (bu kısımda istediğiniz alanı filtreleyebilirsiniz)
-                        if (item.name.lowercase().contains(filterPattern)) {
+                        // Tüm alanlarda arama yap
+                        if (item.name.lowercase().contains(filterPattern) ||  // İsim
+                            item.rfidTag.lowercase().contains(filterPattern) ||  // RFID
+                            item.imei.lowercase().contains(filterPattern) ||     // IMEI
+                            item.location.lowercase().contains(filterPattern) || // Konum
+                            item.address.lowercase().contains(filterPattern)) {  // Adres
                             filteredList.add(item)
                         }
                     }
                 }
                 val results = FilterResults()
                 results.values = filteredList
-                results.count = filteredList.size
                 return results
             }
 
             override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
-                if (results != null && results.count > 0) {
-                    filteredProducts = results.values as List<Product>
-                    notifyDataSetChanged()  // Verileri güncelle
-                }
+                filteredProducts = results?.values as? List<Product> ?: emptyList()
+                notifyDataSetChanged()
             }
         }
     }
