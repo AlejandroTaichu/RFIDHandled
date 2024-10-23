@@ -10,4 +10,8 @@
     <color name="divider">#BDBDBD</color>
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
+<<<<<<< HEAD
+=======
+    <color name="header_color">#2196F3</color>
+>>>>>>> Demo2
 </resources>

@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 <?xml version="1.0" encoding="utf-8"?>
+=======
+>>>>>>> Demo2
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -7,15 +10,24 @@
     android:background="@color/white"
     tools:context=".ui.product.ProductActivity">
 
+<<<<<<< HEAD
+=======
+    <!-- AppBar with Toolbar -->
+>>>>>>> Demo2
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
+<<<<<<< HEAD
+=======
+        <!-- activity_product.xml -->
+>>>>>>> Demo2
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
+<<<<<<< HEAD
             android:background="@color/primary"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             app:title="Ürünleri Yönet"
@@ -41,14 +53,52 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+=======
+            android:background="?attr/colorPrimary"
+            app:title="Ürünleri Yönet"
+            app:titleTextColor="@android:color/white"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+
+            <androidx.appcompat.widget.SearchView
+                android:id="@+id/productSearchView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginEnd="16dp"
+                android:background="@android:color/transparent"
+                android:queryHint="Ürün Ara"
+                app:iconifiedByDefault="true"
+                app:queryHint="Ürün Ara" />
+
+        </androidx.appcompat.widget.Toolbar>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- RecyclerView for Product List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/productsRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+    <!-- FloatingActionButton to Add Product -->
+>>>>>>> Demo2
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/addProductFab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+<<<<<<< HEAD
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:contentDescription="Ürün Ekle"
         android:src="@android:drawable/ic_input_add"
         app:tint="@color/white" />
+=======
+        android:layout_margin="16dp"
+        android:src="@drawable/ic_add_white"
+        app:layout_anchor="@id/productsRecyclerView"
+        app:layout_anchorGravity="bottom|end" />
+>>>>>>> Demo2
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -6,6 +6,10 @@
     android:layout_height="match_parent"
     tools:context=".ui.inventory.InventoryActivity">
 
+<<<<<<< HEAD
+=======
+    <!-- AppBar with Toolbar -->
+>>>>>>> Demo2
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -17,19 +21,30 @@
             android:background="?attr/colorPrimary"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+<<<<<<< HEAD
 
     </com.google.android.material.appbar.AppBarLayout>
 
+=======
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Main Content Area -->
+>>>>>>> Demo2
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
+<<<<<<< HEAD
+=======
+        <!-- Modernized Search View with material style -->
+>>>>>>> Demo2
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/searchInputLayout"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+<<<<<<< HEAD
             android:layout_margin="16dp"
             android:hint="Ürün Ara"
             app:endIconMode="clear_text"
@@ -37,15 +52,35 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:startIconDrawable="@android:drawable/ic_menu_search">
+=======
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:hint="Ürün Ara"
+            app:endIconMode="clear_text"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5">
+>>>>>>> Demo2
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/searchEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+<<<<<<< HEAD
                 android:inputType="text" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
+=======
+                android:inputType="text"
+                android:importantForAccessibility="yes"
+                android:contentDescription="Ürün Arama Alanı" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- RecyclerView with better spacing -->
+>>>>>>> Demo2
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/inventoryRecyclerView"
             android:layout_width="0dp"
@@ -53,6 +88,7 @@
             android:layout_marginTop="8dp"
             android:clipToPadding="false"
             android:padding="8dp"
+<<<<<<< HEAD
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -61,3 +97,12 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
+=======
+            app:layout_constraintTop_toBottomOf="@id/searchInputLayout"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+>>>>>>> Demo2

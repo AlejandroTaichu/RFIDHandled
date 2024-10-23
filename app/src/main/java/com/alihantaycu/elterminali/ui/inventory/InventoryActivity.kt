@@ -4,17 +4,28 @@ import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
+<<<<<<< HEAD
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.alihantaycu.elterminali.R
 import com.alihantaycu.elterminali.databinding.ActivityInventoryBinding
 import com.alihantaycu.elterminali.data.model.Product
+=======
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.alihantaycu.elterminali.R
+import com.alihantaycu.elterminali.databinding.ActivityInventoryBinding
+>>>>>>> Demo2
 
 class InventoryActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityInventoryBinding
     private lateinit var inventoryAdapter: InventoryAdapter
+<<<<<<< HEAD
     private val allProducts = mutableListOf<Product>()
     private val displayedProducts = mutableListOf<Product>()
+=======
+    private lateinit var viewModel: InventoryViewModel
+>>>>>>> Demo2
     private lateinit var warehouseName: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,9 +36,18 @@ class InventoryActivity : AppCompatActivity() {
         warehouseName = intent.getStringExtra("WAREHOUSE_NAME") ?: "Bilinmeyen Depo"
 
         setupToolbar()
+<<<<<<< HEAD
         setupRecyclerView()
         setupSearchView()
         loadInventory()
+=======
+        setupViewModel()
+        setupRecyclerView()
+        setupSearchView()
+        loadInventory()
+
+        viewModel.refreshProducts()
+>>>>>>> Demo2
     }
 
     private fun setupToolbar() {
@@ -39,8 +59,17 @@ class InventoryActivity : AppCompatActivity() {
         }
     }
 
+<<<<<<< HEAD
     private fun setupRecyclerView() {
         inventoryAdapter = InventoryAdapter(displayedProducts)
+=======
+    private fun setupViewModel() {
+        viewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
+    }
+
+    private fun setupRecyclerView() {
+        inventoryAdapter = InventoryAdapter(emptyList())
+>>>>>>> Demo2
         binding.inventoryRecyclerView.apply {
             layoutManager = LinearLayoutManager(this@InventoryActivity)
             adapter = inventoryAdapter
@@ -54,6 +83,7 @@ class InventoryActivity : AppCompatActivity() {
     }
 
     private fun loadInventory() {
+<<<<<<< HEAD
         allProducts.clear()
         displayedProducts.clear()
 
@@ -87,13 +117,29 @@ class InventoryActivity : AppCompatActivity() {
             displayedProducts.addAll(allProducts)
         } else {
             displayedProducts.addAll(allProducts.filter { product ->
+=======
+        viewModel.getProductsByLocation(warehouseName).observe(this) { products ->
+            inventoryAdapter.updateProducts(products)
+        }
+    }
+
+    private fun filterProducts(query: String) {
+        viewModel.getProductsByLocation(warehouseName).observe(this) { products ->
+            val filteredProducts = products.filter { product ->
+>>>>>>> Demo2
                 product.name.contains(query, ignoreCase = true) ||
                         product.rfidTag.contains(query, ignoreCase = true) ||
                         product.imei.contains(query, ignoreCase = true) ||
                         product.address.contains(query, ignoreCase = true)
+<<<<<<< HEAD
             })
         }
         inventoryAdapter.notifyDataSetChanged()
+=======
+            }
+            inventoryAdapter.updateProducts(filteredProducts)
+        }
+>>>>>>> Demo2
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
