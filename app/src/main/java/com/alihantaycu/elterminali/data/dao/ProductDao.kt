@@ -32,4 +32,10 @@ interface ProductDao {
 
     @Query("SELECT * FROM products WHERE imei = :imei LIMIT 1")
     suspend fun findByImei(imei: String): Product?
+
+    @Query("SELECT * FROM products WHERE status = 'MATCHED'")
+    fun getMatchedProducts(): Flow<List<Product>>
+
+    @Query("SELECT * FROM products WHERE matchedBoxRfid = :boxRfid")
+    suspend fun getProductsByBoxRfid(boxRfid: String): List<Product>
 }

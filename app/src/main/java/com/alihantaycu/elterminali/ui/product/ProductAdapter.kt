@@ -1,6 +1,7 @@
 package com.alihantaycu.elterminali.ui.product
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import android.widget.Filter
@@ -13,13 +14,12 @@ class ProductAdapter(
     private val onItemClick: (Product) -> Unit,
     private val onEditClick: (Product) -> Unit,
     private val onDeleteClick: (Product) -> Unit,
-    private val onGenerateQRClick: (Product) -> Unit  // QR kod oluşturma için yeni callback
+    private val onGenerateQRClick: (Product) -> Unit
 ) : RecyclerView.Adapter<ProductAdapter.ProductViewHolder>(), Filterable {
 
     private var filteredProducts: List<Product> = products
 
-    class ProductViewHolder(private val binding: ItemProductManageBinding) : RecyclerView.ViewHolder(binding.root)
-    {
+    class ProductViewHolder(private val binding: ItemProductManageBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(
             product: Product,
             onItemClick: (Product) -> Unit,
@@ -28,6 +28,7 @@ class ProductAdapter(
             onGenerateQRClick: (Product) -> Unit
         ) {
             binding.apply {
+                // Temel bilgiler
                 productName.text = product.name
                 productRfid.text = "RFID: ${product.rfidTag}"
                 productImei.text = "IMEI: ${product.imei}"
@@ -35,24 +36,35 @@ class ProductAdapter(
                 productAddress.text = "Adres: ${product.address}"
                 productCreatedDate.text = "Oluşturulma Tarihi: ${product.createdDate}"
 
-                if (product.imei.isBlank()) productImei.visibility = android.view.View.GONE
-                else productImei.visibility = android.view.View.VISIBLE
+                // Boş alanları gizle
+                productImei.visibility = if (product.imei.isBlank()) View.GONE else View.VISIBLE
+                productAddress.visibility = if (product.address.isBlank()) View.GONE else View.VISIBLE
 
-                if (product.address.isBlank()) productAddress.visibility = android.view.View.GONE
-                else productAddress.visibility = android.view.View.VISIBLE
+                // Eşleştirme durumu gösterimi
+                productStatus.text = when(product.status) {
+                    "MATCHED" -> "Eşleştirildi"
+                    "NEW" -> "Yeni"
+                    else -> product.status
+                }
+                productStatus.visibility = View.VISIBLE
 
+                // Eşleşen kutu bilgisi
+                if (product.matchedBoxRfid != null) {
+                    matchedBoxInfo.text = "Kutu: ${product.matchedBoxRfid}"
+                    matchedBoxInfo.visibility = View.VISIBLE
+                } else {
+                    matchedBoxInfo.visibility = View.GONE
+                }
+
+                // Click listeners
                 root.setOnClickListener { onItemClick(product) }
                 editButton.setOnClickListener { onEditClick(product) }
                 deleteButton.setOnClickListener { onDeleteClick(product) }
                 generateQRButton.setOnClickListener { onGenerateQRClick(product) }
-
-                root.setOnClickListener { onItemClick(product) }
-                editButton.setOnClickListener { onEditClick(product) }
-                deleteButton.setOnClickListener { onDeleteClick(product) }
-                generateQRButton.setOnClickListener { onGenerateQRClick(product) } // Yeni QR butonu için click listener
             }
         }
     }
+
     fun updateProducts(newProducts: List<Product>) {
         products = newProducts
         filteredProducts = newProducts
@@ -76,7 +88,6 @@ class ProductAdapter(
 
     override fun getItemCount(): Int = filteredProducts.size
 
-    // Filterable arayüzünü implement ediyoruz
     override fun getFilter(): Filter {
         return object : Filter() {
             override fun performFiltering(constraint: CharSequence?): FilterResults {
@@ -86,12 +97,12 @@ class ProductAdapter(
                 } else {
                     val filterPattern = constraint.toString().lowercase().trim()
                     for (item in products) {
-                        // Tüm alanlarda arama yap
-                        if (item.name.lowercase().contains(filterPattern) ||  // İsim
-                            item.rfidTag.lowercase().contains(filterPattern) ||  // RFID
-                            item.imei.lowercase().contains(filterPattern) ||     // IMEI
-                            item.location.lowercase().contains(filterPattern) || // Konum
-                            item.address.lowercase().contains(filterPattern)) {  // Adres
+                        if (item.name.lowercase().contains(filterPattern) ||
+                            item.rfidTag.lowercase().contains(filterPattern) ||
+                            item.imei.lowercase().contains(filterPattern) ||
+                            item.location.lowercase().contains(filterPattern) ||
+                            item.address.lowercase().contains(filterPattern) ||
+                            (item.matchedBoxRfid?.lowercase()?.contains(filterPattern) == true)) {
                             filteredList.add(item)
                         }
                     }
@@ -106,7 +117,5 @@ class ProductAdapter(
                 notifyDataSetChanged()
             }
         }
-
     }
-
 }

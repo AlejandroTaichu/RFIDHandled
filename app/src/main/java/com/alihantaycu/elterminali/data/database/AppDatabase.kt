@@ -8,12 +8,11 @@ import com.alihantaycu.elterminali.data.dao.ProductDao
 import com.alihantaycu.elterminali.data.entity.Product
 
 @Database(
-    entities = [Product::class],  // Sadece Product entity'si
-    version = 1,
-    exportSchema = false  // Schema export'u kapalı
+    entities = [Product::class],
+    version = 2  // versiyonu 1'den 2'ye çıkarıyoruz
 )
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun productDao(): ProductDao  // Sadece ProductDao
+    abstract fun productDao(): ProductDao
 
     companion object {
         @Volatile
@@ -26,7 +25,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "app_database"
                 )
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration()  // Bu satır önemli
                     .build()
                 INSTANCE = instance
                 instance

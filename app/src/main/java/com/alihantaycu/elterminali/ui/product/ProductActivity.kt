@@ -37,6 +37,18 @@ class ProductActivity : AppCompatActivity() {
         setupAddProductFab()
         setupSearchView()
         loadProducts()
+        loadMatchedProducts()
+
+    }
+
+    private fun loadMatchedProducts() {
+        lifecycleScope.launch {
+            productDao.getMatchedProducts().collect { matchedProducts ->
+                Log.d("ProductMatch", "Eşleştirilmiş Ürünler: $matchedProducts")
+                // İsterseniz eşleştirilmiş ürünleri farklı şekilde gösterebilirsiniz
+                // Örneğin: adapter.updateMatchedProducts(matchedProducts)
+            }
+        }
     }
 
     private fun setupToolbar() {

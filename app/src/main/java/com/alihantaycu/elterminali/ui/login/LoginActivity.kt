@@ -7,7 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.alihantaycu.elterminali.databinding.ActivityLoginBinding
 import com.alihantaycu.elterminali.ui.main.MainActivity
 
-class admiLoginActivity : AppCompatActivity() {
+class adminoginActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLoginBinding
 
