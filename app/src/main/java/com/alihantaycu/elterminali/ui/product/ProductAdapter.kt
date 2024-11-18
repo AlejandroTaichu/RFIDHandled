@@ -1,23 +1,26 @@
 package com.alihantaycu.elterminali.ui.product
 
+import ProductDiffCallback
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import android.widget.Filter
 import android.widget.Filterable
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
+import androidx.recyclerview.widget.DiffUtil
 import com.alihantaycu.elterminali.data.entity.Product
 import com.alihantaycu.elterminali.databinding.ItemProductManageBinding
 
-class ProductAdapter(
+    class ProductAdapter(
     private var products: List<Product>,
     private val onItemClick: (Product) -> Unit,
     private val onEditClick: (Product) -> Unit,
     private val onDeleteClick: (Product) -> Unit,
-    private val onGenerateQRClick: (Product) -> Unit
-) : RecyclerView.Adapter<ProductAdapter.ProductViewHolder>(), Filterable {
-
+    private val onGenerateQRClick: (Product) -> Unit,
     private var filteredProducts: List<Product> = products
+
+) : RecyclerView.Adapter<ProductAdapter.ProductViewHolder>(), Filterable {
 
     class ProductViewHolder(private val binding: ItemProductManageBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(
@@ -65,10 +68,31 @@ class ProductAdapter(
         }
     }
 
+    override fun onViewAttachedToWindow(holder: ProductViewHolder) {
+        super.onViewAttachedToWindow(holder)
+        animateItem(holder.itemView)
+    }
+
+    private fun animateItem(view: View) {
+        view.alpha = 0f
+        view.translationY = 50f
+        view.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setDuration(300)
+            .setInterpolator(FastOutSlowInInterpolator())
+            .start()
+    }
+
     fun updateProducts(newProducts: List<Product>) {
+
+        val diffCallback = ProductDiffCallback(products, newProducts)
+        val diffResult = DiffUtil.calculateDiff(diffCallback)
+
         products = newProducts
         filteredProducts = newProducts
         notifyDataSetChanged()
+        diffResult.dispatchUpdatesTo(this)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {

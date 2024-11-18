@@ -47,6 +47,8 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
 
+    implementation(libs.recyclerview.animators)
+
 
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)

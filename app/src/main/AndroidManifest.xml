@@ -52,7 +52,11 @@
             android:exported="false" />
 
         <activity
-            android:name=".ui.product.ProductMatchActivity"
+            android:name=".ui.match.activity.ProductMatchActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.match.activity.MatchOptionsActivity"
             android:exported="false" />
 
     </application>

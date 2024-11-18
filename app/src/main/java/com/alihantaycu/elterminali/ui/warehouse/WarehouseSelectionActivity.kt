@@ -27,7 +27,6 @@ class WarehouseSelectionActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
-            setHomeAsUpIndicator(R.drawable.ic_arrow_back)
             title = "Depo Seçimi"
         }
     }

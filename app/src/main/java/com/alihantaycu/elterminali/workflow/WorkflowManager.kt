@@ -5,7 +5,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// app/src/main/java/com/alihantaycu/elterminali/workflow/WorkflowManager.kt
 
 class WorkflowManager(
     private val boxAssignmentDao: BoxAssignmentDao,

@@ -38,4 +38,7 @@ interface ProductDao {
 
     @Query("SELECT * FROM products WHERE matchedBoxRfid = :boxRfid")
     suspend fun getProductsByBoxRfid(boxRfid: String): List<Product>
+
+    @Query("UPDATE products SET status = :status WHERE rfidTag = :rfidTag AND imei = :imei")
+    suspend fun updateProductStatus(rfidTag: String, imei: String, status: String)
 }

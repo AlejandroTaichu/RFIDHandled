@@ -3,6 +3,7 @@ package com.alihantaycu.elterminali.ui.product
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.MenuItem
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -17,6 +18,9 @@ import com.google.zxing.integration.android.IntentIntegrator
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import com.alihantaycu.elterminali.data.database.AppDatabase
+import jp.wasabeef.recyclerview.animators.BaseItemAnimator
+import jp.wasabeef.recyclerview.animators.FadeInUpAnimator
+
 import java.util.*
 
 class ProductActivity : AppCompatActivity() {
@@ -32,23 +36,16 @@ class ProductActivity : AppCompatActivity() {
         val database = AppDatabase.getDatabase(this)
         productDao = database.productDao()
 
-        setupToolbar()
-        setupRecyclerView()
-        setupAddProductFab()
-        setupSearchView()
+        setupUI()
         loadProducts()
-        loadMatchedProducts()
-
+        observeMatchedProducts()
     }
 
-    private fun loadMatchedProducts() {
-        lifecycleScope.launch {
-            productDao.getMatchedProducts().collect { matchedProducts ->
-                Log.d("ProductMatch", "Eşleştirilmiş Ürünler: $matchedProducts")
-                // İsterseniz eşleştirilmiş ürünleri farklı şekilde gösterebilirsiniz
-                // Örneğin: adapter.updateMatchedProducts(matchedProducts)
-            }
-        }
+    private fun setupUI() {
+        setupToolbar()
+        setupRecyclerView()
+        setupSearchView()
+        binding.addProductFab.setOnClickListener { showWorkflowOptionsDialog() }
     }
 
     private fun setupToolbar() {
@@ -59,66 +56,34 @@ class ProductActivity : AppCompatActivity() {
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
-        if (result != null) {
-            if (result.contents == null) {
-                Toast.makeText(this, "Tarama iptal edildi", Toast.LENGTH_LONG).show()
-            } else {
-                lifecycleScope.launch {
-                    try {
-                        val scannedContent = result.contents
-
-                        // QR içeriğini parçala
-                        val parts = scannedContent.split("|")
-                        val rfid = parts[0].substringAfter("RFID:")
-                        val imei = parts[1].substringAfter("IMEI:")
-                        val name = parts[2].substringAfter("NAME:")
-
-                        val nextId = productDao.getNextId() ?: 1
-                        val newProduct = Product(
-                            id = nextId.toString(),
-                            rfidTag = rfid,
-                            imei = imei,
-                            name = name,
-                            location = "Gelen Kargo Depo",
-                            address = "",
-                            createdDate = getCurrentDate()
-                        )
-
-                        // Form dialog'unu göster
-                        showAddProductDialog(newProduct)
-
-                    } catch (e: Exception) {
-                        Log.e("QR_SCAN", "Hata: ${e.message}", e)
-                        Toast.makeText(this@ProductActivity,
-                            "QR kod formatı hatalı: ${e.message}",
-                            Toast.LENGTH_LONG).show()
-                    }
-                }
-            }
-        } else {
-            super.onActivityResult(requestCode, resultCode, data)
-        }
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return if (item.itemId == android.R.id.home) {
+            finish()
+            true
+        } else super.onOptionsItemSelected(item)
     }
 
     private fun setupRecyclerView() {
         productAdapter = ProductAdapter(
             products = mutableListOf(),
             onItemClick = { showProductDetails(it) },
-            onEditClick = { showEditProductDialog(it) },
-            onDeleteClick = { showDeleteConfirmationDialog(it) },
+            onEditClick = { showProductDialog(it, isEditMode = true) },
+            onDeleteClick = { confirmDeleteProduct(it) },
             onGenerateQRClick = { generateQRForProduct(it) }
         )
-        binding.productsRecyclerView.apply {
-            layoutManager = LinearLayoutManager(this@ProductActivity)
-            adapter = productAdapter
-        }
-    }
 
-    private fun setupAddProductFab() {
-        binding.addProductFab.setOnClickListener {
-            showWorkflowOptionsDialog()
+        binding.productsRecyclerView.layoutManager = LinearLayoutManager(this)
+        binding.productsRecyclerView.adapter = productAdapter
+
+        // ItemAnimator kullanımını burada ekliyoruz
+        binding.productsRecyclerView.itemAnimator = FadeInUpAnimator()
+
+        // Eğer animasyon ayarları yapılmak isteniyorsa:
+        (binding.productsRecyclerView.itemAnimator as? BaseItemAnimator)?.apply {
+            addDuration = 300    // Ekleme animasyonu süresi
+            removeDuration = 300 // Silme animasyonu süresi
+            moveDuration = 300   // Taşıma animasyonu süresi
+            changeDuration = 300 // Değişim animasyonu süresi
         }
     }
 
@@ -132,49 +97,29 @@ class ProductActivity : AppCompatActivity() {
         })
     }
 
+    private fun loadProducts() {
+        lifecycleScope.launch {
+            productDao.getAllProducts().collect { products ->
+                productAdapter.updateProducts(products)
+            }
+        }
+    }
+
+    private fun observeMatchedProducts() {
+        lifecycleScope.launch {
+            productDao.getMatchedProducts().collect { matchedProducts ->
+                Log.d("ProductMatch", "Eşleştirilmiş Ürünler: $matchedProducts")
+            }
+        }
+    }
+
     private fun showWorkflowOptionsDialog() {
         val options = arrayOf("QR Okut", "Manuel Ekle")
         AlertDialog.Builder(this)
             .setTitle("İşlem Seçin")
             .setItems(options) { _, which ->
-                when (which) {
-                    0 -> startQRScanner()
-                    1 -> showManualAddProductDialog() // Yeni bir fonksiyon kullanıyoruz
-                }
+                if (which == 0) startQRScanner() else showProductDialog(null, isEditMode = false)
             }
-            .show()
-    }
-
-    private fun showManualAddProductDialog() {
-        val dialogBinding = DialogAddEditProductBinding.inflate(layoutInflater)
-
-        // Spinner için lokasyon listesi
-        val locations = listOf("Gelen Kargo Depo", "Giden Kargo Depo", "Yedek Kargo Depo")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, locations)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        dialogBinding.spinnerLocation.adapter = adapter
-
-        AlertDialog.Builder(this)
-            .setTitle("Yeni Ürün Ekle")
-            .setView(dialogBinding.root)
-            .setPositiveButton("Ekle") { _, _ ->
-                lifecycleScope.launch {
-                    val nextId = productDao.getNextId() ?: 1
-                    val newProduct = Product(
-                        id = nextId.toString(),
-                        rfidTag = dialogBinding.editTextRfid.text.toString(),
-                        imei = dialogBinding.editTextImei.text.toString(),
-                        name = dialogBinding.editTextName.text.toString(),
-                        location = dialogBinding.spinnerLocation.selectedItem.toString(),
-                        address = dialogBinding.editTextAddress.text.toString(),
-                        createdDate = getCurrentDate()
-                    )
-
-                    productDao.insertProduct(newProduct)
-                    loadProducts()
-                }
-            }
-            .setNegativeButton("İptal", null)
             .show()
     }
 
@@ -189,17 +134,27 @@ class ProductActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun processImeiQR(scannedContent: String) {
-        try {
-            // QR içeriğini parçala
-            val parts = scannedContent.split("|")
-            val rfid = parts[0].substringAfter("RFID:")
-            val imei = parts[1].substringAfter("IMEI:")
-            val name = parts[2].substringAfter("NAME:")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
+        if (result != null && result.contents != null) {
+            lifecycleScope.launch {
+                processQRContent(result.contents)
+            }
+        } else {
+            Toast.makeText(this, "Tarama iptal edildi", Toast.LENGTH_LONG).show()
+            super.onActivityResult(requestCode, resultCode, data)
+        }
+    }
 
-            val nextId = productDao.getNextId() ?: 1
+    private suspend fun processQRContent(content: String) {
+        try {
+            val parts = content.split("|")
+            val rfid = parts.getOrNull(0)?.substringAfter("RFID:") ?: ""
+            val imei = parts.getOrNull(1)?.substringAfter("IMEI:") ?: ""
+            val name = parts.getOrNull(2)?.substringAfter("NAME:") ?: ""
+
             val newProduct = Product(
-                id = nextId.toString(),
+                id = (productDao.getNextId() ?: 1).toString(),
                 rfidTag = rfid,
                 imei = imei,
                 name = name,
@@ -208,105 +163,47 @@ class ProductActivity : AppCompatActivity() {
                 createdDate = getCurrentDate()
             )
 
-            // Form dialog'unu göster
-            showAddProductDialog(newProduct)
-
+            showProductDialog(newProduct, isEditMode = false)
         } catch (e: Exception) {
-            Toast.makeText(this,
-                "QR kod formatı hatalı",
-                Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "QR kod formatı hatalı", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private suspend fun processLocationQR(scannedContent: String) {
-        val location = scannedContent.substringAfter("LOC:")
-        Toast.makeText(this, "Lokasyon: $location", Toast.LENGTH_SHORT).show()
-        // Burada lokasyon işlemleri yapılacak
-    }
-
-    private suspend fun processNormalQR(scannedContent: String) {
-        val nextId = productDao.getNextId() ?: 1
-        val newProduct = Product(
-            id = nextId.toString(),
-            rfidTag = scannedContent,
-            imei = "",
-            name = "QR'dan Eklenen Ürün",
-            location = "Gelen Kargo Depo",
-            address = "",
-            createdDate = getCurrentDate()
-        )
-        showAddProductDialog(newProduct)
-    }
-
-    private fun showAddProductDialog(product: Product) {
+    private fun showProductDialog(product: Product?, isEditMode: Boolean) {
         val dialogBinding = DialogAddEditProductBinding.inflate(layoutInflater)
-
-        // Form alanlarını doldur
-        dialogBinding.apply {
-            // QR'dan gelen verileri yerleştir
-            editTextRfid.setText(product.rfidTag)
-            editTextImei.setText(product.imei)
-            editTextName.setText(product.name)
-
-            // Bu alanları değiştirilemez yap
-            editTextRfid.isEnabled = false
-            editTextImei.isEnabled = false
-            editTextName.isEnabled = false
-
-            // Spinner için lokasyon listesi
-            val locations = listOf("Gelen Kargo Depo", "Giden Kargo Depo", "Yedek Kargo Depo")
-            val adapter = ArrayAdapter(this@ProductActivity,
-                android.R.layout.simple_spinner_item, locations)
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            spinnerLocation.adapter = adapter
-        }
-
-        AlertDialog.Builder(this)
-            .setTitle("Ürün Bilgilerini Doldurun")
-            .setView(dialogBinding.root)
-            .setPositiveButton("Ekle") { _, _ ->
-                lifecycleScope.launch {
-                    productDao.insertProduct(product)
-                    loadProducts()
-                    Toast.makeText(this@ProductActivity,
-                        "Ürün eklendi: ${product.name}",
-                        Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("İptal", null)
-            .show()
-    }
-
-    private fun showEditProductDialog(product: Product) {
-        val dialogBinding = DialogAddEditProductBinding.inflate(layoutInflater)
-
         val locations = listOf("Gelen Kargo Depo", "Giden Kargo Depo", "Yedek Parça Depo")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, locations)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        dialogBinding.spinnerLocation.adapter = adapter
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, locations).apply {
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        }
 
         dialogBinding.apply {
-            editTextRfid.setText(product.rfidTag)
-            editTextImei.setText(product.imei)
-            editTextName.setText(product.name)
-            editTextAddress.setText(product.address)
-            spinnerLocation.setSelection(locations.indexOf(product.location))
+            spinnerLocation.adapter = adapter
+            product?.let {
+                editTextRfid.setText(it.rfidTag)
+                editTextImei.setText(it.imei)
+                editTextName.setText(it.name)
+                editTextAddress.setText(it.address)
+                spinnerLocation.setSelection(locations.indexOf(it.location))
+            }
+            editTextRfid.isEnabled = !isEditMode
         }
 
         AlertDialog.Builder(this)
-            .setTitle("Ürünü Düzenle")
+            .setTitle(if (isEditMode) "Ürünü Düzenle" else "Yeni Ürün Ekle")
             .setView(dialogBinding.root)
-            .setPositiveButton("Güncelle") { _, _ ->
-                val updatedProduct = product.copy(
-                    rfidTag = dialogBinding.editTextRfid.text.toString(),
-                    imei = dialogBinding.editTextImei.text.toString(),
-                    name = dialogBinding.editTextName.text.toString(),
-                    location = dialogBinding.spinnerLocation.selectedItem.toString(),
-                    address = dialogBinding.editTextAddress.text.toString()
-                )
-
+            .setPositiveButton(if (isEditMode) "Güncelle" else "Ekle") { _, _ ->
                 lifecycleScope.launch {
-                    productDao.updateProduct(updatedProduct)
+                    val updatedProduct = Product(
+                        id = product?.id ?: (productDao.getNextId() ?: 1).toString(),
+                        rfidTag = dialogBinding.editTextRfid.text.toString(),
+                        imei = dialogBinding.editTextImei.text.toString(),
+                        name = dialogBinding.editTextName.text.toString(),
+                        location = dialogBinding.spinnerLocation.selectedItem.toString(),
+                        address = dialogBinding.editTextAddress.text.toString(),
+                        createdDate = product?.createdDate ?: getCurrentDate()
+                    )
+
+                    if (isEditMode) productDao.updateProduct(updatedProduct) else productDao.insertProduct(updatedProduct)
                     loadProducts()
                 }
             }
@@ -314,7 +211,7 @@ class ProductActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun showDeleteConfirmationDialog(product: Product) {
+    private fun confirmDeleteProduct(product: Product) {
         AlertDialog.Builder(this)
             .setTitle("Ürünü Sil")
             .setMessage("Bu ürünü silmek istediğinizden emin misiniz?")
@@ -345,38 +242,10 @@ class ProductActivity : AppCompatActivity() {
     }
 
     private fun generateQRForProduct(product: Product) {
-        Toast.makeText(this,
-            "QR kod oluşturuluyor: ${product.name}",
-            Toast.LENGTH_SHORT).show()
-    }
-
-    private fun loadProducts() {
-        lifecycleScope.launch {
-            productDao.getAllProducts().collect { productList ->
-                productAdapter.updateProducts(productList)
-            }
-        }
+        Toast.makeText(this, "QR kod oluşturuluyor: ${product.name}", Toast.LENGTH_SHORT).show()
     }
 
     private fun getCurrentDate(): String {
         return SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault()).format(Date())
-    }
-
-    private fun showLocationDialog(product: Product) {
-        val locations = listOf("Gelen Kargo Depo", "Giden Kargo Depo", "Yedek Kargo Depo")
-        AlertDialog.Builder(this)
-            .setTitle("Lokasyon Seçin")
-            .setItems(locations.toTypedArray()) { _, which ->
-                val newLocation = locations[which]
-                lifecycleScope.launch {
-                    val updatedProduct = product.copy(location = newLocation)
-                    productDao.updateProduct(updatedProduct)
-                    loadProducts()
-                    Toast.makeText(this@ProductActivity,
-                        "Lokasyon güncellendi: $newLocation",
-                        Toast.LENGTH_SHORT).show()
-                }
-            }
-            .show()
     }
 }

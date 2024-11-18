@@ -34,4 +34,11 @@ interface BoxAssignmentDao {
 
     @Query("UPDATE box_assignments SET productImei = NULL, status = 'EMPTY', lastUpdatedDate = :updateDate WHERE boxRfid = :rfid")
     suspend fun clearBox(rfid: String, updateDate: String)
+
+    @Query("UPDATE box_assignments SET quantity = quantity - :amount WHERE boxRfid = :boxRfid AND productImei = :productImei")
+    suspend fun decreaseQuantity(boxRfid: String, productImei: String, amount: Int)
+
+    @Query("SELECT * FROM box_assignments WHERE boxRfid = :boxRfid AND status != 'COMPLETED'")
+    suspend fun getActiveBoxContents(boxRfid: String): List<BoxAssignment>
+
 }
