@@ -3,6 +3,7 @@ package com.alihantaycu.elterminali.ui.product
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.MenuItem
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -38,7 +39,16 @@ class ProductActivity : AppCompatActivity() {
         setupSearchView()
         loadProducts()
         loadMatchedProducts()
+    }
 
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                finish()  // Activity'yi kapat
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     private fun loadMatchedProducts() {

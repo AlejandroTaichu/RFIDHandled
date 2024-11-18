@@ -3,9 +3,12 @@ package com.alihantaycu.elterminali.ui.product
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.alihantaycu.elterminali.data.dao.ProductDao
 import com.alihantaycu.elterminali.data.database.AppDatabase
 import com.alihantaycu.elterminali.data.entity.Product
@@ -19,6 +22,27 @@ class ProductMatchActivity : AppCompatActivity() {
     private lateinit var binding: ActivityProductMatchBinding
     private lateinit var productDao: ProductDao
     private var scannedProduct: Product? = null
+    private lateinit var selectedProductsAdapter: SelectedProductsAdapter
+
+    private var isBatchMode = false
+    private val selectedProducts = mutableListOf<Product>()
+    private var selectedBox: String? = null
+
+    private fun setupRecyclerView() {
+        selectedProductsAdapter = SelectedProductsAdapter(
+            products = emptyList(),
+            onRemoveClick = { product ->
+                selectedProducts.remove(product)
+                updateSelectedProductsList()
+                binding.scanProductButton.text = "Ürün Ekle (${selectedProducts.size})"
+            }
+        )
+
+        binding.selectedProductsRecyclerView.apply {
+            layoutManager = LinearLayoutManager(this@ProductMatchActivity)
+            adapter = selectedProductsAdapter
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,7 +52,61 @@ class ProductMatchActivity : AppCompatActivity() {
         val database = AppDatabase.getDatabase(this)
         productDao = database.productDao()
 
+        // Toolbar ayarları
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.apply {
+            setDisplayHomeAsUpEnabled(true)  // Geri butonu
+            setDisplayShowHomeEnabled(true)
+            setDisplayShowTitleEnabled(false)  // Varsayılan başlığı gizle
+        }
+        // Toolbar text ayarları
+        binding.toolbarTitle.text = "Ürün-Kutu Eşleştirme"
+        binding.toolbarSubtitle.text = "Ana Sayfa > Ürünler > Eşleştirme"
+
         setupUI()
+        setupBatchMode() // Yeni eklenen
+    }
+
+    private fun setupBatchMode() {
+        binding.batchModeSwitch.setOnCheckedChangeListener { _, isChecked ->
+            isBatchMode = isChecked
+            updateUIForBatchMode(isChecked)
+        }
+
+        binding.matchAllButton.setOnClickListener {
+            if (selectedBox != null) {
+                lifecycleScope.launch {
+                    matchMultipleProducts()
+                }
+            } else {
+                Toast.makeText(this, "Önce kutu okutun", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun updateUIForBatchMode(isBatchMode: Boolean) {
+        binding.selectedProductsRecyclerView.isVisible = isBatchMode
+        binding.matchAllButton.isVisible = isBatchMode
+
+        if (isBatchMode) {
+            binding.scanProductButton.text = "Ürün Ekle (${selectedProducts.size})"
+            binding.scanBoxButton.isEnabled = true
+        } else {
+            binding.scanProductButton.text = "Ürün QR Okut"
+            binding.scanBoxButton.isEnabled = scannedProduct != null
+            selectedProducts.clear()
+            selectedBox = null
+        }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                finish()  // Activity'yi kapat
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     private fun setupUI() {
@@ -104,10 +182,8 @@ class ProductMatchActivity : AppCompatActivity() {
             val imei = parts[1].substringAfter("IMEI:")
             val name = parts[2].substringAfter("NAME:")
 
-            // Önce ürünü ara
             var product = productDao.findByImei(imei)
 
-            // Ürün yoksa yeni oluştur
             if (product == null) {
                 product = Product(
                     id = UUID.randomUUID().toString(),
@@ -122,11 +198,19 @@ class ProductMatchActivity : AppCompatActivity() {
                 productDao.insertProduct(product)
             }
 
-            scannedProduct = product
-            binding.productInfoText.text = "Ürün: ${product.name} (IMEI: ${product.imei})"
-            binding.scanBoxButton.isEnabled = true
-
-            Toast.makeText(this, "Ürün okutuldu: ${product.name}", Toast.LENGTH_SHORT).show()
+            if (isBatchMode) {
+                // Toplu modda ürünü listeye ekle
+                selectedProducts.add(product)
+                updateSelectedProductsList()
+                binding.scanProductButton.text = "Ürün Ekle (${selectedProducts.size})"
+                Toast.makeText(this, "Ürün listeye eklendi: ${product.name}", Toast.LENGTH_SHORT).show()
+            } else {
+                // Normal mod
+                scannedProduct = product
+                binding.productInfoText.text = "Ürün: ${product.name} (IMEI: ${product.imei})"
+                binding.scanBoxButton.isEnabled = true
+                Toast.makeText(this, "Ürün okutuldu: ${product.name}", Toast.LENGTH_SHORT).show()
+            }
 
         } catch (e: Exception) {
             Toast.makeText(this, "QR kod formatı hatalı", Toast.LENGTH_SHORT).show()
@@ -138,20 +222,24 @@ class ProductMatchActivity : AppCompatActivity() {
         try {
             val boxRfid = content.substringAfter("RFID:")
 
-            scannedProduct?.let { product ->
-                val updatedProduct = product.copy(
-                    matchedBoxRfid = boxRfid,
-                    status = "MATCHED"
-                )
-                productDao.updateProduct(updatedProduct)
-
+            if (isBatchMode) {
+                selectedBox = boxRfid
                 binding.boxInfoText.text = "Kutu: $boxRfid"
-                Toast.makeText(this, "Eşleştirme başarılı", Toast.LENGTH_SHORT).show()
-
-                // Reset ve ana ekrana dön
-                scannedProduct = null
-                binding.scanBoxButton.isEnabled = false
-                finish()
+                binding.matchAllButton.isEnabled = true
+                Toast.makeText(this, "Kutu seçildi. Eşleştirmeye hazır.", Toast.LENGTH_SHORT).show()
+            } else {
+                scannedProduct?.let { product ->
+                    val updatedProduct = product.copy(
+                        matchedBoxRfid = boxRfid,
+                        status = "MATCHED"
+                    )
+                    productDao.updateProduct(updatedProduct)
+                    binding.boxInfoText.text = "Kutu: $boxRfid"
+                    Toast.makeText(this, "Eşleştirme başarılı", Toast.LENGTH_SHORT).show()
+                    scannedProduct = null
+                    binding.scanBoxButton.isEnabled = false
+                    finish()
+                }
             }
         } catch (e: Exception) {
             Toast.makeText(this, "Kutu QR kodu hatalı", Toast.LENGTH_SHORT).show()
@@ -159,7 +247,41 @@ class ProductMatchActivity : AppCompatActivity() {
         }
     }
 
+    private suspend fun matchMultipleProducts() {
+        val boxRfid = selectedBox ?: return
+
+        try {
+            selectedProducts.forEach { product ->
+                val updatedProduct = product.copy(
+                    matchedBoxRfid = boxRfid,
+                    status = "MATCHED"
+                )
+                productDao.updateProduct(updatedProduct)
+            }
+
+            Toast.makeText(this,
+                "${selectedProducts.size} ürün eşleştirildi",
+                Toast.LENGTH_SHORT).show()
+
+            // Temizlik
+            selectedProducts.clear()
+            selectedBox = null
+            updateUIForBatchMode(false)
+            binding.batchModeSwitch.isChecked = false
+            finish()
+
+        } catch (e: Exception) {
+            Toast.makeText(this,
+                "Eşleştirme hatası: ${e.message}",
+                Toast.LENGTH_LONG).show()
+        }
+    }
+
     private fun getCurrentDate(): String {
         return SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault()).format(Date())
+    }
+
+    private fun updateSelectedProductsList() {
+        selectedProductsAdapter.updateProducts(selectedProducts)
     }
 }
