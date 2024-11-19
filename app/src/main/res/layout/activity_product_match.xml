@@ -163,14 +163,6 @@
             android:text="Önce ürünün QR kodunu, ardından kutunun QR kodunu okutun"
             android:textColor="@android:color/darker_gray"/>
 
-        <!-- batchModeSwitch yerine -->
-        <Spinner
-            android:id="@+id/operationModeSpinner"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:padding="8dp"/>
-
     </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
