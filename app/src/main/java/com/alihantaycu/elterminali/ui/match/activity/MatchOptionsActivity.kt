@@ -1,8 +1,8 @@
 package com.alihantaycu.elterminali.ui.match.activity
 
-import MatchOperation
 import android.content.Intent
 import android.os.Bundle
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import com.alihantaycu.elterminali.databinding.ActivityMatchOptionsBinding
 
@@ -18,27 +18,30 @@ class MatchOptionsActivity : AppCompatActivity() {
         setupClickListeners()
     }
 
-    private fun setupClickListeners() {
-        binding.apply {
-            cardMatchProduct.setOnClickListener {
-                startMatchOperation(MatchOperation.MATCH_PRODUCT)
-            }
-            cardRemoveProduct.setOnClickListener {
-                startMatchOperation(MatchOperation.REMOVE_PRODUCT)
-            }
-            cardAddParts.setOnClickListener {
-                startMatchOperation(MatchOperation.ADD_PARTS)
-            }
-            cardRemoveParts.setOnClickListener {
-                startMatchOperation(MatchOperation.REMOVE_PARTS)
-            }
-        }
+    private fun setupToolbar() {
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
     }
 
-    private fun startMatchOperation(operation: MatchOperation) {
-        val intent = Intent(this, ProductMatchActivity::class.java).apply {
-            putExtra("operation", operation.name)
+    private fun setupClickListeners() {
+        binding.cardProductOperations.setOnClickListener {
+            val intent = Intent(this, com.alihantaycu.elterminali.ui.match.activity.PartsMatchActivity::class.java)
+            intent.putExtra("operation_type", "PRODUCT")
+            startActivity(intent)
         }
-        startActivity(intent)
+
+        binding.cardSparePartOperations.setOnClickListener {
+            val intent = Intent(this, com.alihantaycu.elterminali.ui.match.activity.PartsMatchActivity::class.java)
+            intent.putExtra("operation_type", "SPARE_PART")
+            startActivity(intent)
+        }
+    }
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            finish()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
     }
 }

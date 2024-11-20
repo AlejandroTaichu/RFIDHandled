@@ -58,7 +58,9 @@
         <activity
             android:name=".ui.match.activity.MatchOptionsActivity"
             android:exported="false" />
-
+        <activity
+            android:name=".ui.match.activity.PartsMatchActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

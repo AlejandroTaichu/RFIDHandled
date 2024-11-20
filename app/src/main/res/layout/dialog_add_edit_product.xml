@@ -12,6 +12,7 @@
         android:padding="16dp"
         tools:context=".ui.product.ProductActivity">
 
+
         <TextView
             android:id="@+id/titleAddProduct"
             android:layout_width="wrap_content"
@@ -19,9 +20,11 @@
             android:text="Yeni Ürün Ekle"
             android:textSize="18sp"
             android:textStyle="bold"
+            android:textColor="@color/yenilio_mavisi"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
+
 
         <EditText
             android:id="@+id/editTextRfid"

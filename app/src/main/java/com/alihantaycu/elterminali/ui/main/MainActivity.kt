@@ -8,7 +8,6 @@ import com.alihantaycu.elterminali.ui.warehouse.WarehouseSelectionActivity
 import com.alihantaycu.elterminali.ui.count.CountActivity
 import com.alihantaycu.elterminali.ui.match.activity.MatchOptionsActivity
 import com.alihantaycu.elterminali.ui.product.ProductActivity
-import com.alihantaycu.elterminali.ui.match.activity.ProductMatchActivity
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -33,10 +32,6 @@ class MainActivity : AppCompatActivity() {
 
         binding.manageProductsCard.setOnClickListener {
             startActivity(Intent(this, ProductActivity::class.java))
-        }
-
-        binding.productMatchButton.setOnClickListener {
-            startActivity(Intent(this, ProductMatchActivity::class.java))
         }
 
         binding.matchOperationsCard.setOnClickListener {

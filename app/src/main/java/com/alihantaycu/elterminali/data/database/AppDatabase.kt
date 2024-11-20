@@ -9,7 +9,7 @@ import com.alihantaycu.elterminali.data.entity.Product
 
 @Database(
     entities = [Product::class],
-    version = 2  // versiyonu 1'den 2'ye çıkarıyoruz
+    version = 2  // version 2'de kalabilir
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun productDao(): ProductDao
@@ -25,7 +25,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "app_database"
                 )
-                    .fallbackToDestructiveMigration()  // Bu satır önemli
+                    .fallbackToDestructiveMigration() // Bu strateji database'i yeniden oluşturacak
                     .build()
                 INSTANCE = instance
                 instance

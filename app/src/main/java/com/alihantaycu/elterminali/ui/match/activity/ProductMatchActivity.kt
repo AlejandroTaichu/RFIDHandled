@@ -1,19 +1,19 @@
 package com.alihantaycu.elterminali.ui.match.activity
 
 import MatchOperation
-import android.R
 import android.content.Intent
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
-import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.alihantaycu.elterminali.R
 import com.alihantaycu.elterminali.data.dao.ProductDao
 import com.alihantaycu.elterminali.data.database.AppDatabase
 import com.alihantaycu.elterminali.data.entity.Product
@@ -24,11 +24,6 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
-enum class OperationMode {
-    REMOVE_PRODUCT,  // Ürün çıkarma
-    ADD_PARTS,      // Yedek parça ekleme
-    REMOVE_PARTS   // Yedek Parça Çıkar
-}
 
 
 class ProductMatchActivity : AppCompatActivity() {
@@ -37,10 +32,62 @@ class ProductMatchActivity : AppCompatActivity() {
     private var scannedProduct: Product? = null
     private lateinit var selectedProductsAdapter: SelectedProductsAdapter
 
+    private var isRemoveMode = false
     private var isBatchMode = false
     private val selectedProducts = mutableListOf<Product>()
     private var selectedBox: String? = null
     private lateinit var operation: MatchOperation
+
+    private fun updateModeUI(isRemoveMode: Boolean) {
+        binding.apply {
+            // Renk tanımları
+            val backgroundColor = if (isRemoveMode) {
+                ContextCompat.getColor(this@ProductMatchActivity, R.color.yenilio_kırmızısı)
+            } else {
+                ContextCompat.getColor(this@ProductMatchActivity, R.color.yenililo_turuncusu)
+            }
+
+            // Mode description güncelleme
+            modeDescription.apply {
+                val modeText = if (isRemoveMode) {
+                    "❌ ÇIKARMA MODU AKTİF"
+                } else {
+                    "✅ EKLEME MODU AKTİF"
+                }
+
+                text = modeText
+                setBackgroundColor(backgroundColor)
+                setTextColor(Color.WHITE)
+            }
+
+            // Instruction güncelleme
+            instructionText1.text = if (isRemoveMode) {
+                when (operation) {
+                    MatchOperation.REMOVE_PRODUCT -> "Kutudan ürün çıkarma işlemi yapabilirsiniz"
+                    MatchOperation.REMOVE_PARTS -> "Kutudan yedek parça çıkarma işlemi yapabilirsiniz"
+                    else -> "Çıkarma modu aktif"
+                }
+            } else {
+                when (operation) {
+                    MatchOperation.MATCH_PRODUCT -> "Kutuya ürün ekleme işlemi yapabilirsiniz"
+                    MatchOperation.ADD_PARTS -> "Kutuya yedek parça ekleme işlemi yapabilirsiniz"
+                    else -> "Ekleme modu aktif"
+                }
+            }
+
+            // Button güncelleme
+            scanProductButton.apply {
+                backgroundTintList = ColorStateList.valueOf(backgroundColor)
+                text = when {
+                    selectedBox == null -> "KUTU QR OKUT"
+                    isRemoveMode -> if (operation == MatchOperation.REMOVE_PRODUCT) "ÇIKARILACAK ÜRÜNÜ OKUT" else "ÇIKARILACAK PARÇAYI OKUT"
+                    else -> if (operation == MatchOperation.MATCH_PRODUCT) "EKLENECEK ÜRÜNÜ OKUT" else "EKLENECEK PARÇAYI OKUT"
+                }
+            }
+        }
+    }
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,6 +106,228 @@ class ProductMatchActivity : AppCompatActivity() {
         setupBatchMode()
         setupRecyclerView()
         setupOperationUI(operation)
+        updateModeUI(isRemoveMode)  // Burada çağıralım
+    }
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
+        if (result != null) {
+            if (result.contents == null) {
+                Toast.makeText(this, "Tarama iptal edildi", Toast.LENGTH_LONG).show()
+            } else {
+                lifecycleScope.launch {
+                    try {
+                        val scannedContent = result.contents
+                        Log.d("ProductMatch", "Okunan içerik: $scannedContent")
+
+                        when (operation) {
+                            MatchOperation.MATCH_PRODUCT -> {
+                                if (scannedProduct == null) {
+                                    processProductScan(scannedContent)
+                                } else {
+                                    processBoxScan(scannedContent)
+                                }
+                            }
+                            MatchOperation.REMOVE_PRODUCT -> {
+                                if (selectedBox == null) {
+                                    // Kutu okutma
+                                    val boxRfid = scannedContent.substringAfter("RFID:")
+                                    selectedBox = boxRfid
+                                    binding.boxInfoText.text = "Kutu: $boxRfid"
+                                    binding.scanProductButton.isEnabled = true
+                                    Toast.makeText(this@ProductMatchActivity,
+                                        "Kutu seçildi, çıkarılacak ürünü okutun",
+                                        Toast.LENGTH_SHORT).show()
+                                } else {
+                                    processRemoveProduct(scannedContent)
+                                }
+                            }
+                            MatchOperation.ADD_PARTS -> {
+                                if (selectedBox == null) {
+                                    // Kutu okutma
+                                    val boxRfid = scannedContent.substringAfter("RFID:")
+                                    selectedBox = boxRfid
+                                    binding.boxInfoText.text = "Kutu: $boxRfid"
+                                    binding.scanProductButton.isEnabled = true
+                                    Toast.makeText(this@ProductMatchActivity,
+                                        "Kutu seçildi, yedek parça okutun",
+                                        Toast.LENGTH_SHORT).show()
+                                } else {
+                                    processAddSparePart(scannedContent)
+                                }
+                            }
+                            MatchOperation.REMOVE_PARTS -> {
+                                if (selectedBox == null) {
+                                    // Kutu okutma
+                                    val boxRfid = scannedContent.substringAfter("RFID:")
+                                    selectedBox = boxRfid
+                                    binding.boxInfoText.text = "Kutu: $boxRfid"
+                                    binding.scanProductButton.isEnabled = true
+                                    Toast.makeText(this@ProductMatchActivity,
+                                        "Kutu seçildi, çıkarılacak yedek parçayı okutun",
+                                        Toast.LENGTH_SHORT).show()
+                                } else {
+                                    processRemoveSparePart(scannedContent)
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Toast.makeText(this@ProductMatchActivity,
+                            "Hata: ${e.message}",
+                            Toast.LENGTH_LONG).show()
+                        Log.e("ProductMatch", "Hata: ${e.message}", e)
+                    }
+                }
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data)
+        }
+    }
+
+    private suspend fun matchMultipleProducts() {
+        val boxRfid = selectedBox ?: return
+
+        try {
+            when (operation) {
+                MatchOperation.MATCH_PRODUCT -> {
+                    selectedProducts.forEach { product ->
+                        val updatedProduct = product.copy(
+                            matchedBoxRfid = boxRfid,
+                            status = "MATCHED"
+                        )
+                        productDao.updateProduct(updatedProduct)
+                    }
+                    Toast.makeText(this,
+                        "${selectedProducts.size} ürün eşleştirildi",
+                        Toast.LENGTH_SHORT).show()
+                }
+                MatchOperation.ADD_PARTS -> {
+                    selectedProducts.forEach { product ->
+                        val updatedProduct = product.copy(
+                            sparePartBoxRfid = boxRfid,
+                            status = "ADDED_AS_SPARE",
+                            isSparePartBox = true
+                        )
+                        productDao.updateProduct(updatedProduct)
+                    }
+                    Toast.makeText(this,
+                        "${selectedProducts.size} yedek parça eklendi",
+                        Toast.LENGTH_SHORT).show()
+                }
+                else -> {
+                    // Diğer operasyonlar için toplu işlem yok
+                    return
+                }
+            }
+
+            // Temizlik
+            selectedProducts.clear()
+            selectedBox = null
+            updateUIForBatchMode(false)
+            binding.batchModeSwitch.isChecked = false
+            finish()
+
+        } catch (e: Exception) {
+            Toast.makeText(this,
+                "İşlem hatası: ${e.message}",
+                Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private suspend fun processRemoveProduct(content: String) {
+        try {
+            val parts = content.split("|")
+            val imei = parts[1].substringAfter("IMEI:")
+            val product = productDao.findByImei(imei)
+
+            if (product != null) {
+                if (product.matchedBoxRfid != selectedBox) {
+                    Toast.makeText(this, "Bu ürün seçilen kutuya ait değil!", Toast.LENGTH_SHORT).show()
+                    return
+                }
+
+                val updatedProduct = product.copy(
+                    matchedBoxRfid = null,
+                    status = "REMOVED",
+                    removedDate = getCurrentDate()
+                )
+                productDao.updateProduct(updatedProduct)
+                Toast.makeText(this, "Ürün başarıyla çıkarıldı: ${product.name}", Toast.LENGTH_SHORT).show()
+                finish()
+            } else {
+                Toast.makeText(this, "Ürün bulunamadı!", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "İşlem hatası: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private suspend fun processAddSparePart(content: String) {
+        try {
+            val parts = content.split("|")
+            val rfid = parts[0].substringAfter("RFID:")
+            val imei = parts[1].substringAfter("IMEI:")
+            val name = parts[2].substringAfter("NAME:")
+
+            var product = productDao.findByImei(imei)
+
+            if (product == null) {
+                product = Product(
+                    id = UUID.randomUUID().toString(),
+                    rfidTag = rfid,
+                    imei = imei,
+                    name = name,
+                    location = "Yedek Parça Deposu",
+                    address = "",
+                    createdDate = getCurrentDate(),
+                    status = "NEW",
+                    isSparePartBox = true,
+                    sparePartBoxRfid = selectedBox
+                )
+                productDao.insertProduct(product)
+
+                if (isBatchMode) {
+                    selectedProducts.add(product)
+                    updateSelectedProductsList()
+                    binding.scanProductButton.text = "Parça Ekle (${selectedProducts.size})"
+                    Toast.makeText(this, "Parça listeye eklendi: ${product.name}", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "Yedek parça eklendi: ${product.name}", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            } else {
+                Toast.makeText(this, "Bu parça zaten sistemde kayıtlı!", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "İşlem hatası: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private suspend fun processRemoveSparePart(content: String) {
+        try {
+            val parts = content.split("|")
+            val imei = parts[1].substringAfter("IMEI:")
+            val product = productDao.findByImei(imei)
+
+            if (product != null) {
+                if (product.sparePartBoxRfid != selectedBox) {
+                    Toast.makeText(this, "Bu parça seçilen kutuya ait değil!", Toast.LENGTH_SHORT).show()
+                    return
+                }
+
+                val updatedProduct = product.copy(
+                    sparePartBoxRfid = null,
+                    status = "REMOVED",
+                    removedDate = getCurrentDate()
+                )
+                productDao.updateProduct(updatedProduct)
+                Toast.makeText(this, "Yedek parça başarıyla çıkarıldı: ${product.name}", Toast.LENGTH_SHORT).show()
+                finish()
+            } else {
+                Toast.makeText(this, "Yedek parça bulunamadı!", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "İşlem hatası: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun setupOperationUI(operation: MatchOperation) {
@@ -128,69 +397,12 @@ class ProductMatchActivity : AppCompatActivity() {
         }
     }
 
-
-
     private fun setupToolbar() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
             setDisplayShowHomeEnabled(true)
             setDisplayShowTitleEnabled(false)
-        }
-    }
-
-    private fun updateUIForMode(mode: OperationMode) {
-        when (mode) {
-            OperationMode.REMOVE_PRODUCT -> {
-                binding.apply {
-                    toolbarTitle.text = "Ürün Çıkarma"
-                    instructionText.text = "Önce kutuyu, sonra çıkarılacak ürünü okutun"
-
-                    // Kutu ve ürün butonlarının sırası değişiyor
-                    scanBoxButton.text = "Kutu Seç"
-                    scanProductButton.text = "Çıkarılacak Ürünü Seç"
-
-                    selectedProductsRecyclerView.isVisible = false
-                    matchAllButton.isVisible = false
-                    scanBoxButton.isEnabled = true // Burada önce kutu okutulacak
-                    scanProductButton.isEnabled = selectedBox != null
-                }
-            }
-
-            OperationMode.ADD_PARTS -> {
-                binding.apply {
-                    toolbarTitle.text = "Yedek Parça Ekle"
-                    instructionText.text = "Önce kutuyu seçin, sonra eklenecek parçaları okutun"
-
-                    scanBoxButton.text = "Kutu Seç"
-                    scanProductButton.text = "Parça Ekle"
-
-                    selectedProductsRecyclerView.isVisible = true
-                    matchAllButton.isVisible = true
-                    matchAllButton.text = "Parçaları Ekle"
-                    scanBoxButton.isEnabled = true
-                    scanProductButton.isEnabled = selectedBox != null
-                }
-            }
-
-            OperationMode.REMOVE_PARTS -> {
-                binding.apply {
-                    // Başlık ve açıklama güncelleme
-                    toolbarTitle.text = "Yedek Parça Çıkar"
-                    instructionText.text = "Önce kutuyu seçin, sonra çıkarılacak parçaları okutun"
-
-                    // Buton metinleri
-                    scanBoxButton.text = "Kutu Seç"
-                    scanProductButton.text = "Parça Ekle"
-
-                    // Görünürlük ayarları
-                    selectedProductsRecyclerView.isVisible = true
-                    matchAllButton.isVisible = true
-                    matchAllButton.text = "Parçaları Çıkar"
-                    scanBoxButton.isEnabled = true
-                    scanProductButton.isEnabled = selectedBox != null
-                }
-            }
         }
     }
 
@@ -263,9 +475,31 @@ class ProductMatchActivity : AppCompatActivity() {
     }
 
     private fun startProductScan() {
+        when (operation) {
+            MatchOperation.MATCH_PRODUCT -> {
+                if (!isBatchMode && scannedProduct != null) {
+                    Toast.makeText(this, "Önce kutu okutun", Toast.LENGTH_SHORT).show()
+                    return
+                }
+            }
+            MatchOperation.REMOVE_PRODUCT,
+            MatchOperation.ADD_PARTS,
+            MatchOperation.REMOVE_PARTS -> {
+                if (selectedBox == null) {
+                    Toast.makeText(this, "Önce kutu okutun", Toast.LENGTH_SHORT).show()
+                    return
+                }
+            }
+        }
+
         IntentIntegrator(this).apply {
             setDesiredBarcodeFormats(IntentIntegrator.ALL_CODE_TYPES)
-            setPrompt("Ürün QR kodunu okutun")
+            setPrompt(when (operation) {
+                MatchOperation.MATCH_PRODUCT -> "Ürün QR kodunu okutun"
+                MatchOperation.REMOVE_PRODUCT -> "Çıkarılacak ürün QR kodunu okutun"
+                MatchOperation.ADD_PARTS -> "Eklenecek yedek parça QR kodunu okutun"
+                MatchOperation.REMOVE_PARTS -> "Çıkarılacak yedek parça QR kodunu okutun"
+            })
             setCameraId(0)
             setBeepEnabled(true)
             setBarcodeImageEnabled(true)
@@ -274,7 +508,8 @@ class ProductMatchActivity : AppCompatActivity() {
     }
 
     private fun startBoxScan() {
-        if (scannedProduct == null) {
+        // MATCH_PRODUCT için özel kontrol
+        if (operation == MatchOperation.MATCH_PRODUCT && !isBatchMode && scannedProduct == null) {
             Toast.makeText(this, "Önce ürün okutun", Toast.LENGTH_SHORT).show()
             return
         }
@@ -286,35 +521,6 @@ class ProductMatchActivity : AppCompatActivity() {
             setBeepEnabled(true)
             setBarcodeImageEnabled(true)
             initiateScan()
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
-        if (result != null) {
-            if (result.contents == null) {
-                Toast.makeText(this, "Tarama iptal edildi", Toast.LENGTH_LONG).show()
-            } else {
-                lifecycleScope.launch {
-                    try {
-                        val scannedContent = result.contents
-                        Log.d("ProductMatch", "Okunan içerik: $scannedContent")
-
-                        if (scannedProduct == null) {
-                            processProductScan(scannedContent)
-                        } else {
-                            processBoxScan(scannedContent)
-                        }
-                    } catch (e: Exception) {
-                        Toast.makeText(this@ProductMatchActivity,
-                            "Hata: ${e.message}",
-                            Toast.LENGTH_LONG).show()
-                        Log.e("ProductMatch", "Hata: ${e.message}", e)
-                    }
-                }
-            }
-        } else {
-            super.onActivityResult(requestCode, resultCode, data)
         }
     }
 
@@ -387,36 +593,6 @@ class ProductMatchActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Toast.makeText(this, "Kutu QR kodu hatalı", Toast.LENGTH_SHORT).show()
             throw e
-        }
-    }
-
-    private suspend fun matchMultipleProducts() {
-        val boxRfid = selectedBox ?: return
-
-        try {
-            selectedProducts.forEach { product ->
-                val updatedProduct = product.copy(
-                    matchedBoxRfid = boxRfid,
-                    status = "MATCHED"
-                )
-                productDao.updateProduct(updatedProduct)
-            }
-
-            Toast.makeText(this,
-                "${selectedProducts.size} ürün eşleştirildi",
-                Toast.LENGTH_SHORT).show()
-
-            // Temizlik
-            selectedProducts.clear()
-            selectedBox = null
-            updateUIForBatchMode(false)
-            binding.batchModeSwitch.isChecked = false
-            finish()
-
-        } catch (e: Exception) {
-            Toast.makeText(this,
-                "Eşleştirme hatası: ${e.message}",
-                Toast.LENGTH_LONG).show()
         }
     }
 

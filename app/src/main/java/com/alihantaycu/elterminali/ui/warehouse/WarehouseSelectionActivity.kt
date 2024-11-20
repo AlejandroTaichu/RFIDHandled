@@ -33,9 +33,9 @@ class WarehouseSelectionActivity : AppCompatActivity() {
 
     private fun setupRecyclerView() {
         val warehouses = listOf(
-            Warehouse("Gelen Kargo Depo", "Gelen kargolar için depo", R.drawable.ic_incoming),
-            Warehouse("Giden Kargo Depo", "Giden kargolar için depo", R.drawable.ic_outgoing),
-            Warehouse("Yedek Parça Depo", "Yedek parçalar için depo", R.drawable.ic_spare_parts)
+            Warehouse("Gelen Kargo Depo", "Gelen kargolar için depo", R.drawable.incoming_cargo_warehouse),
+            Warehouse("Giden Kargo Depo", "Giden kargolar için depo", R.drawable.outgoin_cargo_warehouse),
+            Warehouse("Yedek Parça Depo", "Yedek parçalar için depo", R.drawable.spare_parts_warehouse)
         )
 
         warehouseAdapter = WarehouseAdapter(warehouses) { warehouse ->

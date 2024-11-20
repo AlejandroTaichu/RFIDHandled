@@ -1,23 +1,57 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:background="@color/white">
 
-    <!-- Toolbar -->
+    <!-- AppBar -->
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+        android:background="@color/yenilio_mavisi">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Eşleştirme İşlemleri"
+                android:textColor="@android:color/white"
+                android:textAppearance="@style/TextAppearance.AppCompat.Title" />
+        </androidx.appcompat.widget.Toolbar>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Ürün Kartı -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardProductOperations"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:layout_marginBottom="8dp"
+        android:background="@color/yenilio_card_bg"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="6dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="?attr/actionBarSize"
-            android:background="?attr/colorPrimary">
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/smartphone"
+                android:contentDescription="Ürün Eşleştir"
+                android:layout_marginEnd="16dp"
+                />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -25,98 +59,69 @@
                 android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/toolbarTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Eşleştirme İşlemleri"
-                    android:textSize="20sp"
-                    android:textColor="@android:color/white" />
+                    android:text="Ürün ve Kutu Eşle/Çıkar"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+                    android:textColor="@color/yenilio_dark_gray" />
 
                 <TextView
-                    android:id="@+id/toolbarSubtitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Ana Sayfa > İşlemler"
-                    android:textSize="14sp"
-                    android:textColor="#E6FFFFFF" />
+                    android:layout_marginTop="4dp"
+                    android:text="Ürün kutu eşleştirme ve çıkarma işlemleri"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                    android:textColor="@color/yenilio_light_gray" />
             </LinearLayout>
-        </androidx.appcompat.widget.Toolbar>
-    </com.google.android.material.appbar.AppBarLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
-    <!-- Operation Cards -->
-    <ScrollView
+    <!-- Yedek Parça Kartı -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardSparePartOperations"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="8dp"
+        android:background="@color/yenilio_card_bg"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="6dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="8dp">
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:gravity="center_vertical">
 
-            <!-- Operation 1: Ürün Eşleştirme -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardMatchProduct"
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/spareparts"
+                android:contentDescription="Yedek Parça Eşleştir"
+                android:layout_marginEnd="16dp"
+                 />
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="4dp">
+                android:orientation="vertical">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:text="Yedek Parça Eşle/Çıkar"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+                    android:textColor="@color/yenilio_dark_gray" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Ürün Eşleştir"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Ürünleri kutu ile eşleştirin"
-                        android:textColor="@android:color/darker_gray" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Operation 2: Ürün Çıkarma -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardRemoveProduct"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="4dp">
-                <!-- Benzer içerik -->
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Operation 3: Yedek Parça Ekleme -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardAddParts"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="4dp">
-                <!-- Benzer içerik -->
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Operation 4: Yedek Parça Çıkarma -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardRemoveParts"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="4dp">
-                <!-- Benzer içerik -->
-            </com.google.android.material.card.MaterialCardView>
-
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Yedek parça eşleştirme ve çıkarma işlemleri"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                    android:textColor="@color/yenilio_light_gray" />
+            </LinearLayout>
         </LinearLayout>
-    </ScrollView>
+    </com.google.android.material.card.MaterialCardView>
 </LinearLayout>

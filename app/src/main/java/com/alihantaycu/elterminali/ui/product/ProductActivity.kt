@@ -160,7 +160,12 @@ class ProductActivity : AppCompatActivity() {
                 name = name,
                 location = "Gelen Kargo Depo",
                 address = "",
-                createdDate = getCurrentDate()
+                createdDate = getCurrentDate(),
+                status = "NEW", // Status eklendi
+                matchedBoxRfid = null,
+                removedDate = null,
+                isSparePartBox = false,
+                sparePartBoxRfid = null
             )
 
             showProductDialog(newProduct, isEditMode = false)
@@ -200,10 +205,16 @@ class ProductActivity : AppCompatActivity() {
                         name = dialogBinding.editTextName.text.toString(),
                         location = dialogBinding.spinnerLocation.selectedItem.toString(),
                         address = dialogBinding.editTextAddress.text.toString(),
-                        createdDate = product?.createdDate ?: getCurrentDate()
+                        createdDate = product?.createdDate ?: getCurrentDate(),
+                        status = product?.status ?: "NEW", // Status eklendi
+                        matchedBoxRfid = product?.matchedBoxRfid,
+                        removedDate = product?.removedDate,
+                        isSparePartBox = product?.isSparePartBox ?: false,
+                        sparePartBoxRfid = product?.sparePartBoxRfid
                     )
 
-                    if (isEditMode) productDao.updateProduct(updatedProduct) else productDao.insertProduct(updatedProduct)
+                    if (isEditMode) productDao.updateProduct(updatedProduct)
+                    else productDao.insertProduct(updatedProduct)
                     loadProducts()
                 }
             }

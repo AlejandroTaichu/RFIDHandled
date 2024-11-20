@@ -13,4 +13,27 @@
     <color name="header_color">#2196F3</color>
     <color name="darker_gray">#3b3b3b</color>
     <color name="holo_red_light">#fa3e3e</color>
+
+
+    <color name= "yenilio_mavisi">#398ccf</color>
+    <color name= "yenililo_turuncusu">#ff9f43</color>
+    <color name= "yenilio_kırmızısı">#ea5455</color>
+    <color name="yenilio_dark_gray">#2b3a45</color>
+    <color name="yenilio_light_gray">#e0e6eb</color>
+    <color name="yenilio_card_bg">#fff4e6</color>
+    <color name="mode_background">@color/yenilio_card_bg</color>
+
+
+
+
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="red">#FF5252</color>
+    <color name="red_light">#FF8A80</color>
+    <color name="green">#4CAF50</color>
+    <color name="green_light">#81C784</color>
+
 </resources>

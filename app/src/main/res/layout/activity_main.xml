@@ -16,7 +16,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
+            android:background="@color/yenilio_mavisi"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             app:title="@string/app_name"
             app:titleTextColor="@color/white" />
@@ -39,7 +39,7 @@
                 android:id="@+id/viewInventoryCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="32dp"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="4dp">
 
@@ -55,8 +55,8 @@
                     <ImageView
                         android:layout_width="48dp"
                         android:layout_height="48dp"
-                        android:src="@android:drawable/ic_menu_view"
-                        app:tint="?attr/colorPrimary" />
+                        android:src="@drawable/warehouse"
+                        />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -85,7 +85,7 @@
                 android:id="@+id/countInventoryCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="32dp"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="4dp">
 
@@ -99,8 +99,8 @@
                     <ImageView
                         android:layout_width="48dp"
                         android:layout_height="48dp"
-                        android:src="@android:drawable/ic_menu_sort_by_size"
-                        app:tint="?attr/colorPrimary" />
+                        android:src="@drawable/count"
+                        />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -129,6 +129,7 @@
                 android:id="@+id/manageProductsCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="32dp"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="4dp">
 
@@ -142,8 +143,8 @@
                     <ImageView
                         android:layout_width="48dp"
                         android:layout_height="48dp"
-                        android:src="@android:drawable/ic_menu_edit"
-                        app:tint="?attr/colorPrimary" />
+                        android:src="@drawable/features"
+                        />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -169,54 +170,10 @@
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/productMatchButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="4dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@color/white"
-                    android:orientation="horizontal"
-                    android:padding="16dp">
-
-                    <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:src="@android:drawable/ic_menu_camera"
-                        app:tint="?attr/colorPrimary" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Product Match"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="Ürün-Kutu eşleştirmesi yap"
-                            android:textColor="@android:color/darker_gray" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/matchOperationsCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="32dp"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="4dp">
 
@@ -230,8 +187,8 @@
                     <ImageView
                         android:layout_width="48dp"
                         android:layout_height="48dp"
-                        android:src="@android:drawable/ic_menu_edit"
-                        app:tint="?attr/colorPrimary" />
+                        android:src="@drawable/match"
+                        />
 
                     <LinearLayout
                         android:layout_width="match_parent"

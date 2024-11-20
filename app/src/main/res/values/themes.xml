@@ -1,9 +1,25 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Base.Theme.ElTerminali" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    <style name="Theme.ElTerminali" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/yenilio_mavisi</item>
+        <item name="colorPrimaryVariant">@color/yenilio_mavisi</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/yenililo_turuncusu</item>
+        <item name="colorSecondaryVariant">@color/yenililo_turuncusu</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+
+        <!-- Switch stili -->
+        <item name="switchStyle">@style/ModeSwitchStyle</item>
     </style>
 
-    <style name="Theme.ElTerminali" parent="Base.Theme.ElTerminali" />
+    <!-- Switch özel stili -->
+    <style name="ModeSwitchStyle" parent="Widget.MaterialComponents.CompoundButton.Switch">
+        <item name="colorControlActivated">@color/yenililo_turuncusu</item>
+        <item name="colorSwitchThumbNormal">@color/yenilio_light_gray</item>
+        <item name="android:colorForeground">@color/yenilio_light_gray</item>
+    </style>
 </resources>

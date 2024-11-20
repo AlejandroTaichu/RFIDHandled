@@ -41,4 +41,5 @@ interface ProductDao {
 
     @Query("UPDATE products SET status = :status WHERE rfidTag = :rfidTag AND imei = :imei")
     suspend fun updateProductStatus(rfidTag: String, imei: String, status: String)
+
 }
