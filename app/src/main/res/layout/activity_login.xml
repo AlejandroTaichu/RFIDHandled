@@ -7,12 +7,27 @@
     android:background="@color/white"
     tools:context=".ui.login.LoginActivity">
 
+    <!-- Logo -->
+
+    <ImageView
+        android:id="@+id/logoImageView"
+        android:layout_width="300dp"
+        android:layout_height="105dp"
+        android:layout_marginTop="108dp"
+        android:contentDescription="Logo"
+        android:src="@drawable/yenilio_logo"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.495"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <androidx.cardview.widget.CardView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
         android:layout_marginTop="150dp"
         android:layout_marginEnd="32dp"
+        android:background="@color/yenilio_card_bg"
         app:cardCornerRadius="8dp"
         app:cardElevation="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -33,7 +48,7 @@
                 android:layout_marginBottom="24dp"
                 android:text="Depo ve Envanter Yönetim Sistemi"
                 android:textAlignment="center"
-                android:textColor="@color/primary"
+                android:textColor="@color/yenilio_dark_gray"
                 android:textSize="24sp"
                 android:textStyle="bold" />
 
@@ -43,8 +58,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="E-mail"
-                app:boxStrokeColor="@color/primary"
-                app:hintTextColor="@color/primary">
+                app:boxStrokeColor="@color/yenilio_mavisi"
+                app:hintTextColor="@color/yenilio_mavisi">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/emailEditText"
@@ -60,8 +75,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:hint="Password"
-                app:boxStrokeColor="@color/primary"
-                app:hintTextColor="@color/primary"
+                app:boxStrokeColor="@color/yenilio_mavisi"
+                app:hintTextColor="@color/yenilio_mavisi"
                 app:passwordToggleEnabled="true">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -76,10 +91,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:backgroundTint="@color/primary"
+                android:backgroundTint="@color/yenililo_turuncusu"
                 android:padding="12dp"
                 android:text="Login"
-                android:textColor="@color/white"
+                android:textColor="@color/yenilio_light_gray"
                 app:cornerRadius="8dp" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>

@@ -20,28 +20,37 @@ class MatchOptionsActivity : AppCompatActivity() {
 
     private fun setupToolbar() {
         setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setDisplayShowTitleEnabled(false)
+        supportActionBar?.apply {
+            setDisplayHomeAsUpEnabled(true)  // Geri tuşunu göster
+            setDisplayShowHomeEnabled(true)  // Home ikonunu göster
+            setDisplayShowTitleEnabled(false) // Varsayılan başlığı gizle
+        }
     }
 
     private fun setupClickListeners() {
         binding.cardProductOperations.setOnClickListener {
-            val intent = Intent(this, com.alihantaycu.elterminali.ui.match.activity.PartsMatchActivity::class.java)
-            intent.putExtra("operation_type", "PRODUCT")
-            startActivity(intent)
+            startProductMatchActivity(isSparePartOperation = false)
         }
 
         binding.cardSparePartOperations.setOnClickListener {
-            val intent = Intent(this, com.alihantaycu.elterminali.ui.match.activity.PartsMatchActivity::class.java)
-            intent.putExtra("operation_type", "SPARE_PART")
-            startActivity(intent)
+            startProductMatchActivity(isSparePartOperation = true)
         }
     }
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == android.R.id.home) {
-            finish()
-            return true
+
+    private fun startProductMatchActivity(isSparePartOperation: Boolean) {
+        val intent = Intent(this, ProductMatchActivity::class.java).apply {
+            putExtra("isSparePartOperation", isSparePartOperation)
         }
-        return super.onOptionsItemSelected(item)
+        startActivity(intent)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                finish()  // Activity'yi sonlandır
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 }
