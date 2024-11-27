@@ -1,13 +1,19 @@
 package com.alihantaycu.elterminali.ui.match.activity
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.res.ColorStateList
+import android.device.ScanManager
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -20,7 +26,6 @@ import com.alihantaycu.elterminali.data.entity.Product
 import com.alihantaycu.elterminali.databinding.ActivityProductMatchBinding
 import com.alihantaycu.elterminali.ui.match.adapter.BatchItem
 import com.alihantaycu.elterminali.ui.match.adapter.BatchItemAdapter
-import com.google.zxing.client.android.BuildConfig
 import com.google.zxing.integration.android.IntentIntegrator
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -29,7 +34,9 @@ import java.util.Locale
 import java.util.UUID
 
 
+
 class ProductMatchActivity : AppCompatActivity() {
+    private lateinit var scanner: ScanManager
     private lateinit var binding: ActivityProductMatchBinding
     private lateinit var productDao: ProductDao
     private lateinit var batchAdapter: BatchItemAdapter  // Eklendi
@@ -38,6 +45,11 @@ class ProductMatchActivity : AppCompatActivity() {
     private var isRemoveOperation = false     // Çıkarma operasyonu mu?
     private var selectedBox: String? = null
     private var isBatchMode = false  // Eklendi
+
+    companion object {
+        private const val ACTION_DECODE = ScanManager.ACTION_DECODE
+        private const val DECODE_DATA_TAG = ScanManager.DECODE_DATA_TAG
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,6 +66,50 @@ class ProductMatchActivity : AppCompatActivity() {
         setupUI()
         updateUIForMode() // İlk UI güncellemesi
         setupBatchMode()
+        initScanner() // Scanner'ı başlat
+        setupScannerListener() // Scanner listener'ı ekle
+
+    }
+
+
+    private fun initScanner() {
+        try {
+            scanner = ScanManager()
+            scanner.openScanner()
+            scanner.switchOutputMode(0)  // Sadece broadcast modu
+        } catch (e: Exception) {
+            Log.e("Scanner", "Scanner başlatma hatası: ${e.message}")
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun setupScannerListener() {
+        val filter = IntentFilter().apply {
+            addAction(ACTION_DECODE)
+        }
+        // System broadcast olduğu için RECEIVER_EXPORTED kullanıyoruz
+        registerReceiver(scannerReceiver, filter, Context.RECEIVER_EXPORTED)
+    }
+
+    private val scannerReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == ScanManager.ACTION_DECODE) {
+                intent.getByteArrayExtra(ScanManager.DECODE_DATA_TAG)?.let { barcodeData ->
+                    val scannedData = String(barcodeData)
+                    lifecycleScope.launch {
+                        try {
+                            processQRResult(scannedData)
+                        } catch (e: Exception) {
+                            Toast.makeText(
+                                this@ProductMatchActivity,
+                                "Barkod işleme hatası: ${e.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun setupBatchMode() {
@@ -548,13 +604,36 @@ class ProductMatchActivity : AppCompatActivity() {
     }
 
     private fun startQRScan() {
-        IntentIntegrator(this).apply {
-            setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
-            setPrompt(if (selectedBox == null) "Kutu QR kodunu okutun" else "Ürün QR kodunu okutun")
-            setCameraId(0)
-            setBeepEnabled(true)
-            setBarcodeImageEnabled(true)
-            initiateScan()
+        if (selectedBox == null) {
+            // Kutu QR okutma - Kamera ile
+            IntentIntegrator(this).apply {
+                setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
+                setPrompt("Kutu QR kodunu okutun")
+                initiateScan()
+            }
+        } else {
+            // Ürün okutma - Scanner ile
+            try {
+                scanner.startDecode()
+            } catch (e: Exception) {
+                Toast.makeText(this, "Scanner hatası: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
+
+    override fun onPause() {
+        super.onPause()
+        scanner.stopDecode()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        try {
+            unregisterReceiver(scannerReceiver)
+            scanner.closeScanner()
+        } catch (e: Exception) {
+            Log.e("Scanner", "Scanner kapatma hatası: ${e.message}")
+        }
+    }
+
 }

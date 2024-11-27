@@ -253,7 +253,7 @@ class ProductActivity : AppCompatActivity() {
     }
 
     private fun generateQRForProduct(product: Product) {
-        Toast.makeText(this, "QR kod oluşturuluyor: ${product.name}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "QR kod oluşturuluyor: ${product.name}, ${product.imei}, ${product.rfidTag}", Toast.LENGTH_SHORT).show()
     }
 
     private fun getCurrentDate(): String {
