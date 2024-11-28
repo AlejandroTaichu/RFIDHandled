@@ -19,6 +19,8 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+        multiDexEnabled = true
+
     }
 
     buildTypes {
@@ -51,7 +53,7 @@ dependencies {
 
     implementation(libs.recyclerview.animators)
 
-    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
+    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar", "*.aar"))))  //
 
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)

@@ -623,8 +623,13 @@ class ProductMatchActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        scanner.stopDecode()
+        try {
+            scanner.stopDecode()
+        } catch (e: Exception) {
+            Log.e("ProductMatchActivity", "Failed to stop decoding: ${e.message}")
+        }
     }
+
 
     override fun onDestroy() {
         super.onDestroy()

@@ -4,10 +4,10 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.alihantaycu.elterminali.databinding.ActivityMainBinding
-import com.alihantaycu.elterminali.ui.warehouse.WarehouseSelectionActivity
 import com.alihantaycu.elterminali.ui.count.CountActivity
 import com.alihantaycu.elterminali.ui.match.activity.MatchOptionsActivity
 import com.alihantaycu.elterminali.ui.product.ProductActivity
+import com.alihantaycu.elterminali.ui.warehouse.WarehouseSelectionActivity
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
