@@ -69,7 +69,6 @@
         <activity android:name=".ui.count.activity.RFIDSettingsActivity"
             android:exported="false"/>
 
-
     </application>
 
 </manifest>

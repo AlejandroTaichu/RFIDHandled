@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/action_settings"
-        android:icon="@drawable/ic_tools"
+        android:icon="@drawable/settings"
         android:title="Ayarlar"
         app:showAsAction="always" />
 </menu>

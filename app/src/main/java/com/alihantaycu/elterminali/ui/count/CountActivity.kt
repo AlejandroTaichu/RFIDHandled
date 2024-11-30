@@ -3,9 +3,9 @@ package com.alihantaycu.elterminali.ui.count
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
@@ -28,7 +28,6 @@ class CountActivity : AppCompatActivity() {
     private var mRfidManager: RfidManager? = null
     private var RFID_INIT_STATUS = false
 
-    private var currentPower: Int = 30 // Varsayılan güç
 
     private val prefs by lazy {
         getSharedPreferences("rfid_settings", Context.MODE_PRIVATE)
@@ -80,6 +79,7 @@ class CountActivity : AppCompatActivity() {
     private fun initRfid() {
         USDKManager.getInstance().init(applicationContext, object : USDKManager.InitListener {
             override fun onStatus(status: USDKManager.STATUS) {
+                Log.d("RFID", "RFID init status: $status")
                 if (status == USDKManager.STATUS.SUCCESS) {
                     mRfidManager = USDKManager.getInstance().rfidManager
                     mRfidManager?.let {
@@ -94,6 +94,7 @@ class CountActivity : AppCompatActivity() {
                 }
             }
         })
+
     }
 
     private fun setupViewModel() {
